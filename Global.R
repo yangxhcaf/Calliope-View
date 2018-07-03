@@ -9,14 +9,14 @@ library(sf)
 library(rgdal)
 library(shinyjs)
 
-####—DATA RETRIEVAL####
 
-
+####NEON Field Sites####
 ## Retrieve data from NEON Field Sites in JSON format
 FieldSite_JSON <- fromJSON('NEON_Field_Sites.json')
 # Create a data frame usaing cbind()
 FieldSite_data <- cbind(FieldSite_JSON$features$properties,FieldSite_JSON$features$geometry)
 
+####NEON Domains####
 ## Retrive data from NEON Domains in JSON format
 domains <- fromJSON('NEON_Domains.json')
 # Retrieve just the DomainID and Domain Name
@@ -26,6 +26,7 @@ domains <- as.data.frame(unique(domains))
 # Retrieve geometry data using st_read()
 domain_data <- st_read('NEON_Domains.json')
 
+####NEON Flightpaths####
 ## Retrieve info for NEON flightpaths
 # Get human info about flightpaths
 domain_table <- data.frame("Abb"=c("BART","HARV","BLAN","SCBI","SERC","DSNY","JERC","OSBS","STEI-CHEQ","STEI-TREE","UNDE","KONZ-KONA","GRSM","MLBS","ORNL","DELA","LENO","TALL","DCFS-WOOD","NOGP","CLBJ","OAES"),"Site"=c("Bartlett Experimental Forest North-South flight box", "Harvard Forest flight box","Blandy Experimental Farm flight box","Smithsonian Conservation Biology Institute flight box","Smithsonian Ecological Research Center flight box","Disney Wilderness Preserve flight box","Jones Ecological Research Center Priority 1 flight box","Ordway-Swisher Biological Station Priority 1 flight box","Chequamegon-Nicolet National Forest flight box","Steigerwaldt-Treehaven Priority 2 flight box","UNDERC flight box","Konza Prairie Biological Station and KONA agricultural site flight box","Great Smoky Mountains National Park priority 2 flight box","Mountain Lake Biological Station flight box","Oak Ridge National Laboratory flight box","Dead Lake flight box","Lenoir Landing flight box","Talladega National Forest flight box","Woodworth and Dakota Coteau Field School flight box","Northern Great Plains flight box","LBJ Grasslands flight box","Klemme Range Research Station flight box"))
@@ -67,6 +68,7 @@ for (file in flight_filenames[-1]) {
 # Final data table
 flight_data <- data.frame(flight_info, flight_geo)
 
+####Santa Rita Range####
 ## Retrieve data from Santa Rita range
 ARS_Flume <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/ARS_Flume.geojson')
 PAG <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/PAG_2011_LiDAR_Township_and_Range_Sections.geojson')
@@ -76,6 +78,7 @@ Walnut_Gulch <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/Walnut_Gulc
 WalnutGulch_Flux_Tower <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/WG_Flux_Tower_Locations.geojson')
 WalnutGulch_Flux_Tower_400m_Buffer <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/WG_Flux_Towers_Locations_400m_Buffer_Square.geojson')
 
+####Sanimal####
 ## Retrieve animal images from Sanimal JSON
 Sanimal_JSON <- fromJSON('http://128.196.142.26:9200/metadata/_search?size=5000')
 Sanimal_species <- Sanimal_JSON$hits$hits$`_source`$imageMetadata$speciesEntries
