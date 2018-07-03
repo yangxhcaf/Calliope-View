@@ -1,0 +1,15 @@
+{
+"type": "FeatureCollection",
+"name": "ARS Flume",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "", "description": "", "WS_ID": "Flume 1", "East": "513001.00000000000", "North": "3524599.00000000000", "Elevation": "1043.00000000000" }, "geometry": { "type": "Point", "coordinates": [ -110.862571, 31.857048 ] } },
+{ "type": "Feature", "properties": { "Name": "", "description": "", "WS_ID": "Flume 2", "East": "512933.00000000000", "North": "3524372.00000000000", "Elevation": "1046.00000000000" }, "geometry": { "type": "Point", "coordinates": [ -110.863293, 31.855001 ] } },
+{ "type": "Feature", "properties": { "Name": "", "description": "", "WS_ID": "Flume 3", "East": "508195.00000000000", "North": "3524179.00000000000", "Elevation": "969.00000000000" }, "geometry": { "type": "Point", "coordinates": [ -110.913377, 31.853304 ] } },
+{ "type": "Feature", "properties": { "Name": "", "description": "", "WS_ID": "Flume 4", "East": "509035.00000000000", "North": "3523954.00000000000", "Elevation": "897.00000000000" }, "geometry": { "type": "Point", "coordinates": [ -110.9045, 31.851268 ] } },
+{ "type": "Feature", "properties": { "Name": "", "description": "", "WS_ID": "Flume 5", "East": "514020.00000000000", "North": "3519985.00000000000", "Elevation": "1165.00000000000" }, "geometry": { "type": "Point", "coordinates": [ -110.851866, 31.815409 ] } },
+{ "type": "Feature", "properties": { "Name": "", "description": "", "WS_ID": "Flume 6", "East": "513759.00000000000", "North": "3519764.00000000000", "Elevation": "1155.00000000000" }, "geometry": { "type": "Point", "coordinates": [ -110.854627, 31.813418 ] } },
+{ "type": "Feature", "properties": { "Name": "", "description": "", "WS_ID": "Flume 7", "East": "513934.00000000000", "North": "3520100.00000000000", "Elevation": "1165.00000000000" }, "geometry": { "type": "Point", "coordinates": [ -110.852773, 31.816447 ] } },
+{ "type": "Feature", "properties": { "Name": "", "description": "", "WS_ID": "Flume 8", "East": "513942.00000000000", "North": "3520153.00000000000", "Elevation": "1161.00000000000" }, "geometry": { "type": "Point", "coordinates": [ -110.852688, 31.816925 ] } }
+]
+}

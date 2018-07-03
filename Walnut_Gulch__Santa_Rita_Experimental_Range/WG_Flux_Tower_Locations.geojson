@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "WG_Flux_Tower_Locations",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "Name": "Lucky Hills Shrubland Flux Site", "description": "Lucky Hills Shrubland Flux Site    <br>       <br>   FID   0    <br>   OID_   0    <br>   Name   Lucky Hills Shrubland Flux Site    <br>   FolderPath   WG Flux Towers.kml\/WG Flux Towers    <br>   SymbolID   0    <br>   AltMode   -1    <br>   Base   0    <br>   Snippet       <br>   PopupInfo       <br>   HasLabel   -1    <br>   LabelID   0" }, "geometry": { "type": "Point", "coordinates": [ -110.052023, 31.743896 ] } },
+{ "type": "Feature", "properties": { "Name": "Kendall Grassland Flux Tower", "description": "Kendall Grassland Flux Tower    <br>       <br>   FID   1    <br>   OID_   0    <br>   Name   Kendall Grassland Flux Tower    <br>   FolderPath   WG Flux Towers.kml\/WG Flux Towers    <br>   SymbolID   0    <br>   AltMode   -1    <br>   Base   0    <br>   Snippet       <br>   PopupInfo       <br>   HasLabel   -1    <br>   LabelID   0" }, "geometry": { "type": "Point", "coordinates": [ -109.941845, 31.736518 ] } }
+]
+}
