@@ -3,8 +3,8 @@ library(shinythemes)
 library(leaflet)
 
 fluidPage(theme = shinytheme("cerulean"),
-          tags$a(href = "https://github.com/cyverse-gis/suas-metadata", tags$b("Github")),
-          navbarPage(tags$b("Calliope"),
+          tags$a(href = "https://github.com/Danielslee51/Calliope-View", tags$b("Github")),
+          navbarPage(tags$b("Calliope-View"),
                      id='nav',
                      tabPanel("Interactive Map",
                               sidebarLayout(
