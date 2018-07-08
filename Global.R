@@ -12,9 +12,13 @@ library(shinyjs)
 
 ####NEON Field Sites####
 ## Retrieve data from NEON Field Sites in JSON format
-FieldSite_JSON <- fromJSON('NEON_Field_Sites.json')
+FieldSite_point_JSON <- fromJSON('NEON_Field_Sites.json')
 # Create a data frame usaing cbind()
-FieldSite_data <- cbind(FieldSite_JSON$features$properties,FieldSite_JSON$features$geometry)
+FieldSite_point <- cbind(FieldSite_point_JSON$features$properties,FieldSite_point_JSON$features$geometry)
+
+FieldSite_poly_JSON <- fromJSON('http://128.196.38.73:9200/neon_sites/_search?pretty')
+FieldSite_poly <- cbind(FieldSite_poly_JSON$hits$hits$`_source`$site, FieldSite_poly_JSON$hits$hits$`_source`$boundary)
+#FieldSite_poly <- FieldSite_poly[names(FieldSite_poly)!="siteLongitude" & names(FieldSite_poly)!="siteLatitude"]
 
 ####NEON Domains####
 ## Retrive data from NEON Domains in JSON format

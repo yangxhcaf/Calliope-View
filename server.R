@@ -1,6 +1,5 @@
 # Shiny server
 function(input, output, session) {
-  points_field <- cbind(FieldSite_data$Longitude,FieldSite_data$Latitude)
   
   ####—INTERACTIVE MAP TAB####
   
@@ -18,9 +17,13 @@ function(input, output, session) {
   # Reactive value for layer control
   legend <- reactiveValues(group = "LiDAR")
   
+  
   output$map <- renderLeaflet({
     
-    leaflet() %>%
+    basemap <- leaflet()
+    
+    map <- (
+    basemap %>%
       addProviderTiles(provider = providers$OpenStreetMap.Mapnik,
                        options = providerTileOptions(noWrap = TRUE)
                        ) %>%
@@ -35,18 +38,19 @@ function(input, output, session) {
                        options = layersControlOptions(collapsed = FALSE)
                        ) %>%
       # Markers for NEON field site locations
-      addMarkers(data = FieldSite_data,
+      addMarkers(data = FieldSite_point,
                 popup = paste0("<strong>Site Name: </strong>",
-                              FieldSite_data$SiteName,
+                              FieldSite_point$SiteName,
                               "<br><strong>Region: </strong>",
-                              FieldSite_data$DomainName,
+                              FieldSite_point$DomainName,
                               "<br><strong>State: </strong>",
-                              FieldSite_data$Full_State,
+                              FieldSite_point$Full_State,
                               "<br><strong>Host: </strong>",
-                              FieldSite_data$SiteHost),
+                              FieldSite_point$SiteHost),
                 clusterOptions = markerClusterOptions(),
-                label = paste0(FieldSite_data$SiteName)
+                label = paste0(FieldSite_point$SiteName)
                 ) %>%
+
       # Polygons for NEON domains (blue)
       addPolygons(data = domain_data,
                   weight=2,
@@ -112,8 +116,38 @@ function(input, output, session) {
                   color = "brown",
                   popup = paste0(WalnutGulch_Flux_Tower_400m_Buffer$Name)
                   )
+    )
+    
+    for (i in 1:10) {
+      if (is.array(FieldSite_poly$coordinates[[i]])) {
+        map <- map %>%
+          addPolygons(lng = FieldSite_poly$coordinates[[i]][1,,1],
+                      lat = FieldSite_poly$coordinates[[i]][1,,2],
+                      color = "purple",
+                      popup = paste0("Boundaries for ",
+                                     FieldSite_poly$siteDescription[i]
+                                     )
+                      )
+      } else {
+        map <- map %>%
+          addPolygons(lng = FieldSite_poly$coordinates[[i]][[1]][,1],
+                      lat = FieldSite_poly$coordinates[[i]][[1]][,2],
+                      color = "purple",
+                      popup = paste0("Boundaries for ",
+                                     FieldSite_poly$siteDescription[i]
+                                     )
+                     
+          )}
+    }
+      map %>% 
+        addMarkers(lng = FieldSite_poly$siteLongitude,
+                   lat = FieldSite_poly$siteLatitude,
+                   popup = FieldSite_poly$siteDescription)
+    
+
   })
   
+    
   # Allow zooming in on Santa Rita Region
   observe({
     proxy <- leafletProxy("map")
