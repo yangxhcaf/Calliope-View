@@ -15,7 +15,3 @@ git clone https://github.com/Danielslee51/Calliope-View/
 Then, run the app in an R IDE (such as Rstudio).
 
 ![](RStudio.png)
-
-**Or**:
-
-Visit the [shinyapps.io](https://www.shinyapps.io/) website for this app: <https://danielslee51.shinyapps.io/calliope-view/>
