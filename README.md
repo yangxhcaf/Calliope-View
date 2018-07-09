@@ -12,10 +12,10 @@ To install, change the working directory on your shell to the desired directory,
 cd /Desktop
 git clone https://github.com/Danielslee51/Calliope-View/
 ```
-Then: run the app in an R IDE (such as Rstudio).
+Then, run the app in an R IDE (such as Rstudio).
 
 ![](RStudio.png)
 
-Or:
+**Or**:
 
 Visit the [shinyapps.io](https://www.shinyapps.io/) website for this app: <https://danielslee51.shinyapps.io/calliope-view/>
