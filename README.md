@@ -14,4 +14,4 @@ git clone https://github.com/Danielslee51/Calliope-View/
 ```
 Then, run the app in an R IDE (such as Rstudio).
 
-![](RStudio.png)
+![](Img/RStudio.png)
