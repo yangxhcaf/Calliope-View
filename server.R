@@ -1,18 +1,8 @@
 # Shiny server
 function(input, output, session) {
   
-  ####—INTERACTIVE MAP TAB####
+  ####INTERACTIVE MAP TAB####
   
-  #icons
-  nut_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/nut.png",
-                       iconWidth = 30, iconHeight = 30,
-                       iconAnchorX = 0, iconAnchorY = 0)
-  tower_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/water-tower.png",
-                         iconWidth = 30, iconHeight = 30,
-                         iconAnchorX = 0, iconAnchorY = 0)
-  flume_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/creek.png",
-                         iconWidth = 30, iconHeight = 30,
-                         iconAnchorX = 0, iconAnchorY = 0)
   
   # Reactive value for layer control
   legend <- reactiveValues(group = "LiDAR")
@@ -76,7 +66,7 @@ function(input, output, session) {
                  popup = paste0(ARS_Flume$WS_ID,
                                 "<br>Elevation= ",
                                 as.numeric(as.character(ARS_Flume$Elevation)),
-                                " (m)"),
+                                " m"),
                  icon = flume_icon
                  ) %>%
       # Boundary for PAG 2011 LiDAR Township and Range Sections (red)
@@ -139,14 +129,10 @@ function(input, output, session) {
                      
           )}
     }
-      map %>% 
-        addMarkers(lng = FieldSite_poly$siteLongitude,
-                   lat = FieldSite_poly$siteLatitude,
-                   popup = FieldSite_poly$siteDescription)
+      map
     
 
   })
-  
     
   # Allow zooming in on Santa Rita Region
   observe({
@@ -155,19 +141,18 @@ function(input, output, session) {
       proxy %>% setView(lng = -110.453707, lat = 31.681433, zoom = 9)
     }
   })
-  
   # Allow user to filter Sanimal data
   Sanimal_filtered_data <- reactive({
     Sanimal_data %>%
       dplyr::filter(Sanimal_data$`Common Name` %in% input$Sanimal_species) %>%
       dplyr::filter(between(Count, left = input$Sanimal_range[1], right = input$Sanimal_range[2]))
   })
-  # Display filtered data on map
+  # Display filtered Sanimal data on map
   observe({
     proxy <- leafletProxy("map")
     proxy %>%
       clearGroup(group = "Sanimal") %>%
-      addMarkers(data=Sanimal_filtered_data(),
+      addMarkers(data = Sanimal_filtered_data(),
                  popup = paste0("<strong> Species:  </strong>",
                                 Sanimal_filtered_data()$`Common Name`,
                                 "<br><strong> Scientific Name: </strong>",
@@ -177,8 +162,28 @@ function(input, output, session) {
                  group = "Sanimal",
                  clusterOptions = markerClusterOptions())
   })
+  #Allow user to filter drone data
+  Drone_filtered_NEON <- reactive({
+    if (input$only_neon) {
+      drone_data[(!(drone_data$neonSiteCode %in% NA)),]
+    } else {
+      drone_data
+    }
+  })
+  # Display filtered Drone data on map
+  observe({
+    proxy <- leafletProxy("map")
+    proxy %>%
+      clearGroup(group = "Drone") %>%
+      addMarkers(data = Drone_filtered_NEON(),
+                 popup = paste0("<b>Date: </b>",
+                                Drone_filtered_NEON()$dateTaken,
+                                "<br><b>Altitude: </b>",
+                                Drone_filtered_NEON()$altitude, " m"),
+                 group = "Drone")
+  })
   
-  ####—INPUT FILE TAB####
+  ####INPUT FILE TAB####
   
   # Input files test
   user_file_info <- reactive({
@@ -206,15 +211,17 @@ function(input, output, session) {
                                     options = layersControlOptions(collapsed = FALSE)) 
                }
                )
-  observeEvent(input$remove_user_file,
-               leafletProxy("map") %>% clearGroup(group = as.character(user_file_name()))
-               )
+
   
-  ####—SANIMAL DATA TAB####
+  ####SANIMAL DATA TAB####
   
   output$Sanimal_table <- renderTable(Sanimal_filtered_data())
   
-  ####—FOR ME TAB####
+  ####DRONE DATA TAB####
+  
+  output$Drone_table <- renderTable(Drone_filtered_NEON())
+  
+  ####FOR ME TAB####
   
   output$text_me <- renderText(
     paste0(is.null(input$user_input_file)

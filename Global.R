@@ -9,16 +9,16 @@ library(sf)
 library(rgdal)
 library(shinyjs)
 
+####———MAP DATA———####
 
-####NEON Field Sites####
-## Retrieve data from NEON Field Sites in JSON format
+###NEON Field Sites####
+## Retrieve point data for NEON Field Sites in JSON format
 FieldSite_point_JSON <- fromJSON('NEON_Field_Sites.json')
 # Create a data frame usaing cbind()
 FieldSite_point <- cbind(FieldSite_point_JSON$features$properties,FieldSite_point_JSON$features$geometry)
-
+## Retrieve polygon data for NEON Field Sites
 FieldSite_poly_JSON <- fromJSON('http://128.196.38.73:9200/neon_sites/_search?pretty')
 FieldSite_poly <- cbind(FieldSite_poly_JSON$hits$hits$`_source`$site, FieldSite_poly_JSON$hits$hits$`_source`$boundary)
-#FieldSite_poly <- FieldSite_poly[names(FieldSite_poly)!="siteLongitude" & names(FieldSite_poly)!="siteLatitude"]
 
 ####NEON Domains####
 ## Retrive data from NEON Domains in JSON format
@@ -122,7 +122,37 @@ Sanimal_data <- as.data.frame(cbind("took" = Sanimal_JSON$took,
 # Edit certain columns, delete repeats
 Sanimal_data$Longitude <- as.numeric(as.character(Sanimal_data$Longitude))
 Sanimal_data$Latitude <- as.numeric(as.character(Sanimal_data$Latitude))
+Sanimal_data$Count <- as.numeric(as.character(Sanimal_data$Count))
 Sanimal_data$`Common Name` <- as.character(Sanimal_data$`Common Name`)
 Sanimal_data$`Scientific Name` <- as.character(Sanimal_data$`Scientific Name`)
-Sanimal_data$Count <- as.numeric(as.character(Sanimal_data$Count))
 Sanimal_data <- unique(Sanimal_data)
+
+#### DRONE ####
+drone_json <- fromJSON('http://128.196.38.73:9200/metadata/_search?pretty')
+drone_data <- cbind(drone_json$hits$hits[names(drone_json$hits$hits)!="_source"],
+                    drone_json$hits$hits$`_source`[names(drone_json$hits$hits$`_source`)!="imageMetadata"],
+                    drone_json$hits$hits$`_source`$imageMetadata[!(names(drone_json$hits$hits$`_source`$imageMetadata) %in% c("speed", "rotation"))],
+                    drone_json$hits$hits$`_source`$imageMetadata$speed,
+                    drone_json$hits$hits$`_source`$imageMetadata$rotation)
+drone_data$longitude <- NA
+drone_data$latitude <- NA
+for (i in 1:length(drone_data$position)) {
+  drone_data$latitude[i] <- strsplit(drone_data$position, ", ")[[i]][1]
+  drone_data$longitude[i] <- strsplit(drone_data$position, ", ")[[i]][2]
+}
+drone_data$longitude <- as.numeric(drone_data$longitude)
+drone_data$latitude <- as.numeric(drone_data$latitude)
+drone_data <- drone_data[,(!(names(drone_data) %in% "position"))]
+
+####———MAP ICONS———####
+nut_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/nut.png",
+                     iconWidth = 30, iconHeight = 30,
+                     iconAnchorX = 0, iconAnchorY = 0)
+tower_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/water-tower.png",
+                       iconWidth = 30, iconHeight = 30,
+                       iconAnchorX = 0, iconAnchorY = 0)
+flume_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/creek.png",
+                       iconWidth = 30, iconHeight = 30,
+                       iconAnchorX = 0, iconAnchorY = 0)
+
+                                         

@@ -19,8 +19,10 @@ fluidPage(theme = shinytheme("cerulean"),
                                              tags$br(),
                                              tags$br(),
                                              tags$b("Filter Sanimal Data"),
-                                             selectInput(inputId = "Sanimal_species", label = "Choose species:", choices = unique(Sanimal_data$`Common Name`), selected = unique(Sanimal_data$`Common Name`), multiple = TRUE),
-                                             sliderInput(inputId = "Sanimal_range", label = "Choose count range:", min = 1, max = max(Sanimal_data$Count), value = c(1,max(Sanimal_data$Count)))
+                                             selectInput(inputId = "Sanimal_species", label = "Choose species:", choices = unique(Sanimal_data$`Common Name`), selected = NA, multiple = TRUE),
+                                             sliderInput(inputId = "Sanimal_range", label = "Choose count range:", min = 1, max = max(Sanimal_data$Count), value = c(1,max(Sanimal_data$Count))),
+                                             tags$b("Filter Drone Data"),
+                                             checkboxInput(inputId = "only_neon", label = "Only include NEON")
                                              ),
                                              
                                 mainPanel(
@@ -36,6 +38,8 @@ fluidPage(theme = shinytheme("cerulean"),
                               tableOutput("contents")),
                      tabPanel("Sanimal Data",
                               tableOutput("Sanimal_table")),
+                     tabPanel("Drone Data",
+                              tableOutput("Drone_table")),
                      tabPanel("For me",
                               textOutput("text_me"),
                               tableOutput("table_me"))
