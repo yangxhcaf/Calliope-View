@@ -4,7 +4,6 @@
 <img src="Img/Tyson.png" width = "150"/>
 Tyson Swetnam is the big boss of the project. He coaches rugby for U of A.
 <br>
-
 <img src="Img/Daniel.JPG" width = "250"/>
 <br>
 Daniel Lee was an intern at the CyVerse lab during the Summer of 2018. He helped with the design of Calliope View, working under Tyson to develope the first versions of the app.
