@@ -13,7 +13,7 @@ library(shinyjs)
 
 ###NEON Field Sites####
 ## Retrieve point data for NEON Field Sites in JSON format
-FieldSite_point_JSON <- fromJSON('NEON_Field_Sites.json')
+FieldSite_point_JSON <- fromJSON('NEON_data/NEON_Field_Sites.json')
 # Create a data frame usaing cbind()
 FieldSite_point <- cbind(FieldSite_point_JSON$features$properties,FieldSite_point_JSON$features$geometry)
 ## Retrieve polygon data for NEON Field Sites
@@ -22,18 +22,19 @@ FieldSite_poly <- cbind(FieldSite_poly_JSON$hits$hits$`_source`$site, FieldSite_
 
 ####NEON Domains####
 ## Retrive data from NEON Domains in JSON format
-domains <- fromJSON('NEON_Domains.json')
+domains <- fromJSON('NEON_data/NEON_Domains.json')
 # Retrieve just the DomainID and Domain Name
 domains <- cbind("DomainID" = domains$features$properties$DomainID,"Domain"=domains$features$properties$DomainName)
 # Remove Duplicates, make data frame
 domains <- as.data.frame(unique(domains))
 # Retrieve geometry data using st_read()
-domain_data <- st_read('NEON_Domains.json')
+domain_data <- st_read('NEON_data/NEON_Domains.json')
 
 ####NEON Flightpaths####
 ## Retrieve info for NEON flightpaths
 # Get human info about flightpaths
-domain_table <- data.frame("Abb"=c("BART","HARV","BLAN","SCBI","SERC","DSNY","JERC","OSBS","STEI-CHEQ","STEI-TREE","UNDE","KONZ-KONA","GRSM","MLBS","ORNL","DELA","LENO","TALL","DCFS-WOOD","NOGP","CLBJ","OAES"),"Site"=c("Bartlett Experimental Forest North-South flight box", "Harvard Forest flight box","Blandy Experimental Farm flight box","Smithsonian Conservation Biology Institute flight box","Smithsonian Ecological Research Center flight box","Disney Wilderness Preserve flight box","Jones Ecological Research Center Priority 1 flight box","Ordway-Swisher Biological Station Priority 1 flight box","Chequamegon-Nicolet National Forest flight box","Steigerwaldt-Treehaven Priority 2 flight box","UNDERC flight box","Konza Prairie Biological Station and KONA agricultural site flight box","Great Smoky Mountains National Park priority 2 flight box","Mountain Lake Biological Station flight box","Oak Ridge National Laboratory flight box","Dead Lake flight box","Lenoir Landing flight box","Talladega National Forest flight box","Woodworth and Dakota Coteau Field School flight box","Northern Great Plains flight box","LBJ Grasslands flight box","Klemme Range Research Station flight box"))
+domain_table <- data.frame("Abb"=c("BART","HARV","BLAN","SCBI","SERC","DSNY","JERC","OSBS","STEI-CHEQ","STEI-TREE","UNDE","KONZ-KONA","GRSM","MLBS","ORNL","DELA","LENO","TALL","DCFS-WOOD","NOGP","CLBJ","OAES"),
+                           "Site"=c("Bartlett Experimental Forest North-South flight box", "Harvard Forest flight box","Blandy Experimental Farm flight box","Smithsonian Conservation Biology Institute flight box","Smithsonian Ecological Research Center flight box","Disney Wilderness Preserve flight box","Jones Ecological Research Center Priority 1 flight box","Ordway-Swisher Biological Station Priority 1 flight box","Chequamegon-Nicolet National Forest flight box","Steigerwaldt-Treehaven Priority 2 flight box","UNDERC flight box","Konza Prairie Biological Station and KONA agricultural site flight box","Great Smoky Mountains National Park priority 2 flight box","Mountain Lake Biological Station flight box","Oak Ridge National Laboratory flight box","Dead Lake flight box","Lenoir Landing flight box","Talladega National Forest flight box","Woodworth and Dakota Coteau Field School flight box","Northern Great Plains flight box","LBJ Grasslands flight box","Klemme Range Research Station flight box"))
 CR_table <- data.frame("Abb"=c(as.character("C"),as.character("R")),"Actual"=c(as.character("Core"),as.character("Relocatable")))
 # filesnames needed for loopz
 flight_filenames_all <- Sys.glob('Flightdata/Flight_boundaries_2016/D*')
@@ -57,7 +58,12 @@ for (file in flight_filenames_all) {
   # 1
   version_part <- strsplit(parts[[1]][7],"")[[1]][2]
   # 1
-  file_info <- cbind("Name"=name_part,"DomainID"=domain_part,"Site"=as.character(domain_table$Site[domain_table$Abb %in% site_part]),"Core or Relocatable"=paste0(CR_table[grep(RC_part_type,CR_table$Abb),2]," #",RC_part_num),"Priority"=priority_part,"Version"=version_part)
+  file_info <- cbind("Name" = name_part,
+                     "DomainID" = domain_part,
+                     "Site" = as.character(domain_table$Site[domain_table$Abb %in% site_part]),
+                     "Core or Relocatable"= paste0(CR_table[grep(RC_part_type,CR_table$Abb),2], " #", RC_part_num),
+                     "Priority" = priority_part,
+                     "Version" = version_part)
   flight_info <- rbind(flight_info, file_info)
 }
 flight_info$DomainID <- as.numeric(as.character(flight_info$DomainID))
@@ -157,6 +163,6 @@ flume_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/creek.p
                        iconAnchorX = 0, iconAnchorY = 0)
 drone_image_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/map-pin.png",
                              iconAnchorX = 24, iconAnchorY = 48,
-                             popupAnchorX = 24, popupAnchorY = 0)
+                             popupAnchorX = 0, popupAnchorY = 0)
 
                                          

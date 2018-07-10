@@ -43,7 +43,7 @@ function(input, output, session) {
 
       # Polygons for NEON domains (blue)
       addPolygons(data = domain_data,
-                  weight=2,
+                  weight = 2,
                   fillOpacity = '0.05',
                   popup = paste0(domain_data$DomainName)
                   ) %>%
@@ -55,7 +55,7 @@ function(input, output, session) {
                                  "<br><strong>Domain: </strong>",
                                  domains[flight_data$DomainID,2],
                                  "<br><strong>Core/Relocatable: </strong>",
-                                 flight_data$'Core or Relocatable',
+                                 flight_data$'Core.or.Relocatable',
                                  "<br><strong>Flight Priority: </strong>",
                                  flight_data$Priority,
                                  "<br><strong>Version: </strong>",
@@ -224,9 +224,8 @@ function(input, output, session) {
   
   ####FOR ME TAB####
   
-  output$text_me <- renderText(
-    paste0(is.null(input$user_input_file)
-           )
-    )
-  #output$table_me <- renderTable(flight_frame)
+  #output$text_me <- renderText(
+  #  paste0(is.null(input$user_input_file)))
+  
+  output$table_me <- renderTable(flight_info)
 }
