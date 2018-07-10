@@ -1,0 +1,3 @@
+### Calliope was created by a group of scientists at the [CyVerse lab](http://www.cyverse.org/) at the University of Arizona.
+<hr>
+![](Img/Tyson.png)
