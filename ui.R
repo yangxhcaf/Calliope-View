@@ -35,7 +35,8 @@ fluidPage(theme = shinytheme("cerulean"),
                               tabsetPanel(
                                 tabPanel("About",
                                          includeMarkdown('About Calliope.Rmd')),
-                                tabPanel("Credits")
+                                tabPanel("Credits",
+                                         includeMarkdown('Credits.Rmd'))
                               )
                               ),
                      tabPanel("Input File",
