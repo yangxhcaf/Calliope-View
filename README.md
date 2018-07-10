@@ -12,6 +12,6 @@ To install, change the working directory on your shell to the desired directory,
 cd /Desktop
 git clone https://github.com/Danielslee51/Calliope-View/
 ```
-Then, run the app in an R IDE (such as Rstudio).
+Then, run server.R in an R IDE (such as Rstudio).
 
 ![](Img/RStudio.png)
