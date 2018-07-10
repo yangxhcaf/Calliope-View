@@ -4,6 +4,7 @@ library(leaflet)
 
 fluidPage(theme = shinytheme("cerulean"),
           tags$a(href = "https://github.com/Danielslee51/Calliope-View", tags$b("Github")),
+          tags$a(href = "https://icons8.com", tags$b("Icon pack by Icons8")),
           navbarPage(tags$b("Calliope-View"),
                      id='nav',
                      tabPanel("Interactive Map",

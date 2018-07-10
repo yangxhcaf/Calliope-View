@@ -143,6 +143,7 @@ for (i in 1:length(drone_data$position)) {
 drone_data$longitude <- as.numeric(drone_data$longitude)
 drone_data$latitude <- as.numeric(drone_data$latitude)
 drone_data <- drone_data[,(!(names(drone_data) %in% "position"))]
+drone_data <- unique(drone_data)
 
 ####———MAP ICONS———####
 nut_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/nut.png",
@@ -154,5 +155,8 @@ tower_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/water-t
 flume_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/creek.png",
                        iconWidth = 30, iconHeight = 30,
                        iconAnchorX = 0, iconAnchorY = 0)
+drone_image_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/map-pin.png",
+                             iconAnchorX = 24, iconAnchorY = 48,
+                             popupAnchorX = 24, popupAnchorY = 0)
 
                                          

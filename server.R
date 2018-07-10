@@ -180,7 +180,8 @@ function(input, output, session) {
                                 Drone_filtered_NEON()$dateTaken,
                                 "<br><b>Altitude: </b>",
                                 Drone_filtered_NEON()$altitude, " m"),
-                 group = "Drone")
+                 group = "Drone",
+                 icon = drone_image_icon)
   })
   
   ####INPUT FILE TAB####
