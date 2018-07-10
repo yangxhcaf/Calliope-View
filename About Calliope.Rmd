@@ -2,4 +2,4 @@
 
 The Calliope project was created to help scientists studying biology and ecology by creating a platform that allowed them to easily compare ecological data with drone data of their own. Through this, scientists could compare environmental factors with their drone images, allowing them to more accurately find relationships, notice patterns, and make conclusions about our changing ecosystem.
 
-Calliope's interface displays ecological statistics sourced from [NEON](https://www.neonscience.org/), an observatory network that provides open data on ecosystems across continents, alongside drone imaging using leaflet and R Shiny.
+Calliope's interface displays ecological statistics sourced from [NEON](https://www.neonscience.org/), an observatory network that provides open data on ecosystems across continents, alongside drone imaging using leaflet and R Shiny. The drone imaging is pulled through a custom index operating on Elasticsearch.
