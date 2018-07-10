@@ -31,17 +31,15 @@ fluidPage(theme = shinytheme("cerulean"),
                                   )
                               )
                      ),
-                     tabPanel("Potential Table",
-                              "*Hoping to add table for datapoints*"),
                      tabPanel("About the Calliope Project",
                               "*Hoping to eventually add description of project*"),
                      tabPanel("Input File",
                               tableOutput("contents")),
-                     tabPanel("Sanimal Data",
-                              tableOutput("Sanimal_table")),
                      tabPanel("Drone Data",
                               tableOutput("Drone_table")),
-                     tabPanel("For me",
+                     tabPanel("Sanimal Data",
+                              tableOutput("Sanimal_table")),
+                     tabPanel("For me (troubleshooting)",
                               textOutput("text_me"),
                               tableOutput("table_me"))
                      

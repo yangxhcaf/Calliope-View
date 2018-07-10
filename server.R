@@ -41,15 +41,16 @@ function(input, output, session) {
                 label = paste0(FieldSite_point$SiteName)
                 ) %>%
 
-      # Polygons for NEON domains (blue)
+      # Polygons for NEON domains (green)
       addPolygons(data = domain_data,
                   weight = 2,
                   fillOpacity = '0.05',
-                  popup = paste0(domain_data$DomainName)
+                  popup = paste0(domain_data$DomainName),
+                  color = "green"
                   ) %>%
-      # Areas for NEON flight paths (green)
+      # Areas for NEON flight paths (purple)
       addPolygons(data = flight_data$geometry,
-                  color = "green",
+                  color = "purple",
                   popup = paste0("<strong>Site: </strong><br>",
                                  flight_data$Site,
                                  "<br><strong>Domain: </strong>",
@@ -107,13 +108,12 @@ function(input, output, session) {
                   popup = paste0(WalnutGulch_Flux_Tower_400m_Buffer$Name)
                   )
     )
-    
+    # Add polygon boundaries for field sites (blue)
     for (i in 1:10) {
       if (is.array(FieldSite_poly$coordinates[[i]])) {
         map <- map %>%
           addPolygons(lng = FieldSite_poly$coordinates[[i]][1,,1],
                       lat = FieldSite_poly$coordinates[[i]][1,,2],
-                      color = "purple",
                       popup = paste0("Boundaries for ",
                                      FieldSite_poly$siteDescription[i]
                                      )
@@ -122,7 +122,6 @@ function(input, output, session) {
         map <- map %>%
           addPolygons(lng = FieldSite_poly$coordinates[[i]][[1]][,1],
                       lat = FieldSite_poly$coordinates[[i]][[1]][,2],
-                      color = "purple",
                       popup = paste0("Boundaries for ",
                                      FieldSite_poly$siteDescription[i]
                                      )
