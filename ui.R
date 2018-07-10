@@ -32,7 +32,12 @@ fluidPage(theme = shinytheme("cerulean"),
                               )
                      ),
                      tabPanel("About the Calliope Project",
-                              "*Hoping to eventually add description of project*"),
+                              tabsetPanel(
+                                tabPanel("About",
+                                         includeMarkdown('About Calliope.Rmd')),
+                                tabPanel("Credits")
+                              )
+                              ),
                      tabPanel("Input File",
                               tableOutput("contents")),
                      tabPanel("Drone Data",
