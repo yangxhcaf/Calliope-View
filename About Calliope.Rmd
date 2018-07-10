@@ -1,28 +1,5 @@
----
-title: "About Calliope"
-output: html_document
----
+# About Calliope
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+The Calliope project was created to help scientists studying biology and ecology by creating a platform that allowed them to easily compare ecological data with drone data of their own. Through this, scientists could compare environmental factors with their drone images, allowing them to more accurately find relationships, notice patterns, and make conclusions about our changing ecosystem.
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Calliope's interface displays ecological statistics sourced from [NEON](https://www.neonscience.org/), an observatory network that provides open data on ecosystems across continents, alongside drone imaging using leaflet and R Shiny.
