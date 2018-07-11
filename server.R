@@ -175,8 +175,8 @@ function(input, output, session) {
     proxy %>%
       clearGroup(group = "Drone") %>%
       addMarkers(data = Drone_filtered_NEON(),
-                 popup = paste0("<b>Date: </b>",
-                                Drone_filtered_NEON()$dateTaken,
+                 popup = paste0("<b>Date taken: </b>",
+                                strsplit(Drone_filtered_NEON()$dateTaken, "T")[[1]][1],
                                 "<br><b>Altitude: </b>",
                                 Drone_filtered_NEON()$altitude, " m"),
                  group = "Drone",
