@@ -163,6 +163,6 @@ flume_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/creek.p
                        iconAnchorX = 0, iconAnchorY = 0)
 drone_image_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/map-pin.png",
                              iconAnchorX = 24, iconAnchorY = 48,
-                             popupAnchorX = 0, popupAnchorY = 0)
+                             popupAnchorX = -1, popupAnchorY = -48)
 
                                          
