@@ -95,11 +95,9 @@ Sanimal_species <- Sanimal_JSON$hits$hits$`_source`$imageMetadata$speciesEntries
 Sanimal_position <- Sanimal_JSON$hits$hits$`_source`$imageMetadata$location$position
 # Extract Lat/Long values from Sanimal position coordinates
 Latitude <- data.frame()
-for (i in 1:length(Sanimal_species)) {
-  Latitude <- rbind(Latitude, data.frame("Latitude" = strsplit(Sanimal_position, ", ")[[i]][1]))
-}
 Longitude <-data.frame()
 for (i in 1:length(Sanimal_species)) {
+  Latitude <- rbind(Latitude, data.frame("Latitude" = strsplit(Sanimal_position, ", ")[[i]][1]))
   Longitude <- rbind(Longitude, data.frame("Longitude" = strsplit(Sanimal_position, ", ")[[i]][2]))
 }
 # Extract species data (common/sientific name, count) from species list
@@ -108,11 +106,7 @@ Sanimal_scientificname <- data.frame()
 Sanimal_count <- data.frame()
 for (i in 1:length(Sanimal_species)) {
   Sanimal_commonname <- rbind(Sanimal_commonname, data.frame("Common_name" = Sanimal_species[[i]]$species$commonName))
-}
-for (i in 1:length(Sanimal_species)) {
   Sanimal_scientificname <- rbind(Sanimal_scientificname, data.frame("Scientific_name" = Sanimal_species[[i]]$species$scientificName))
-}
-for (i in 1:length(Sanimal_species)) {
   Sanimal_count <- rbind(Sanimal_count, data.frame("Count" = Sanimal_species[[i]]$count))
 }
 # Create final data frame
@@ -125,7 +119,7 @@ Sanimal_data <- as.data.frame(cbind("took" = Sanimal_JSON$took,
                                     "Scientific Name" = as.character(Sanimal_scientificname$Scientific_name),
                                     "Count" = Sanimal_count$Count
 ))
-# Edit certain columns, delete repeats
+# Class conversions, delete repeats
 Sanimal_data$Longitude <- as.numeric(as.character(Sanimal_data$Longitude))
 Sanimal_data$Latitude <- as.numeric(as.character(Sanimal_data$Latitude))
 Sanimal_data$Count <- as.numeric(as.character(Sanimal_data$Count))
@@ -140,15 +134,24 @@ drone_data <- cbind(drone_json$hits$hits[names(drone_json$hits$hits)!="_source"]
                     drone_json$hits$hits$`_source`$imageMetadata[!(names(drone_json$hits$hits$`_source`$imageMetadata) %in% c("speed", "rotation"))],
                     drone_json$hits$hits$`_source`$imageMetadata$speed,
                     drone_json$hits$hits$`_source`$imageMetadata$rotation)
-drone_data$longitude <- NA
-drone_data$latitude <- NA
+
 for (i in 1:length(drone_data$position)) {
-  drone_data$latitude[i] <- strsplit(drone_data$position, ", ")[[i]][1]
-  drone_data$longitude[i] <- strsplit(drone_data$position, ", ")[[i]][2]
+  # New columns for lat/long, from position
+  drone_data$Latitude[i] <- strsplit(drone_data$position, ", ")[[i]][1]
+  drone_data$Longitude[i] <- strsplit(drone_data$position, ", ")[[i]][2]
+  # New column for day of month, from dateTaken
+  day_chunk <- strsplit(drone_data$dateTaken[i], "-")[[1]][3]
+  drone_data$dayTaken[i] <- strsplit(day_chunk, "T")[[1]][1]
+  # New column for time of day, from dateTaken
+  drone_data$timeTaken[i] <- strsplit(drone_data$dateTaken[i], "T")[[1]][2]
 }
-drone_data$longitude <- as.numeric(drone_data$longitude)
-drone_data$latitude <- as.numeric(drone_data$latitude)
-drone_data <- drone_data[,(!(names(drone_data) %in% "position"))]
+drone_data$Longitude <- as.numeric(drone_data$Longitude)
+drone_data$Latitude <- as.numeric(drone_data$Latitude)
+# Remove columns, reorder
+drone_data <- drone_data[,!(names(drone_data) %in% c("position", "dateTaken", "hourTaken"))]
+drone_data <- drone_data[c("_id", "neonSiteCode", "Latitude", "Longitude", "altitude", "yearTaken", "monthTaken", "dayTaken", "timeTaken",
+                           "dayOfYearTaken", "dayOfWeekTaken", "x", "y", "z", "roll", "pitch", "yaw",
+                           "collectionID", "storagePath", "storageType", "_type", "_index", "_score")]
 drone_data <- unique(drone_data)
 
 ####———MAP ICONS———####
@@ -164,5 +167,4 @@ flume_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/creek.p
 drone_image_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/map-pin.png",
                              iconAnchorX = 24, iconAnchorY = 48,
                              popupAnchorX = -1, popupAnchorY = -48)
-
-                                         
+           

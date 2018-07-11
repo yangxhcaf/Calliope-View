@@ -161,13 +161,20 @@ function(input, output, session) {
                  group = "Sanimal",
                  clusterOptions = markerClusterOptions())
   })
+  
+  
+  
   #Allow user to filter drone data
-  Drone_filtered_NEON <- reactive({
+  Drone_filtered_NEON_only <- reactive({
     if (input$only_neon) {
       drone_data[(!(drone_data$neonSiteCode %in% NA)),]
     } else {
       drone_data
     }
+  })
+  Drone_filtered_NEON <- reactive({
+    Drone_filtered_NEON_only() %>%
+      dplyr::filter(Drone_filtered_NEON_only()$neonSiteCode %in% input$Drone_site)
   })
   # Display filtered Drone data on map
   observe({
@@ -176,11 +183,14 @@ function(input, output, session) {
       clearGroup(group = "Drone") %>%
       addMarkers(data = Drone_filtered_NEON(),
                  popup = paste0("<b>Date taken: </b>",
-                                strsplit(Drone_filtered_NEON()$dateTaken, "T")[[1]][1],
+                                Drone_filtered_NEON()$yearTaken, "/", Drone_filtered_NEON()$monthTaken, "/", Drone_filtered_NEON()$dayTaken,
                                 "<br><b>Altitude: </b>",
                                 Drone_filtered_NEON()$altitude, " m"),
                  group = "Drone",
-                 icon = drone_image_icon)
+                 icon = drone_image_icon) %>%
+      leaflet.extras::addDrawToolbar(targetGroup = "Drone",
+                                     polylineOptions = FALSE, rectangleOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
+                                     editOptions = leaflet.extras::editToolbarOptions())
   })
   
   ####INPUT FILE TAB####
@@ -226,5 +236,5 @@ function(input, output, session) {
   #output$text_me <- renderText(
   #  paste0(is.null(input$user_input_file)))
   
-  output$table_me <- renderTable(flight_info)
+  output$table_me <- renderTable(Drone_filtered_NEON())
 }
