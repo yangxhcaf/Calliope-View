@@ -1,4 +1,4 @@
-install.packages(c("leaflet","dpylr","tidyr","jsonlite","sf","rgdal"))
+
 library(leaflet)
 library(dplyr)
 library(tidyr)
