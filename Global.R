@@ -1,11 +1,8 @@
-install.packages(c("gglot2","leaflet","dpylr","tidyr","jsonlite","curl","lubridate","sf","rgdal"))
-library(ggplot2)
+install.packages(c("leaflet","dpylr","tidyr","jsonlite","sf","rgdal"))
 library(leaflet)
 library(dplyr)
 library(tidyr)
 library(jsonlite)
-library(curl)
-library(lubridate)
 library(sf)
 library(rgdal)
 
