@@ -38,7 +38,8 @@ function(input, output, session) {
                               "<br><strong>Host: </strong>",
                               FieldSite_point$SiteHost),
                 clusterOptions = markerClusterOptions(),
-                label = paste0(FieldSite_point$SiteName)
+                label = paste0(FieldSite_point$SiteName),
+                icon = NEON_icon
                 ) %>%
 
       # Polygons for NEON domains (green)

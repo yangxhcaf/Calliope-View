@@ -152,6 +152,10 @@ drone_data <- drone_data[c("_id", "neonSiteCode", "Latitude", "Longitude", "alti
 drone_data <- unique(drone_data)
 
 ####———MAP ICONS———####
+NEON_icon <- makeIcon(iconUrl = "Img/NEON.png",
+                      iconWidth = 30, iconHeight = 30,
+                      iconAnchorX = 15, iconAnchorY = 15,
+                      popupAnchorX = -1, popupAnchorY = -15)
 nut_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/nut.png",
                      iconWidth = 30, iconHeight = 30,
                      iconAnchorX = 0, iconAnchorY = 0)
