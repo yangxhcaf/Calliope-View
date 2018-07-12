@@ -115,21 +115,17 @@ function(input, output, session) {
           addPolygons(lng = FieldSite_poly$coordinates[[i]][1,,1],
                       lat = FieldSite_poly$coordinates[[i]][1,,2],
                       popup = paste0("Boundaries for ",
-                                     FieldSite_poly$siteDescription[i]
-                                     )
-                      )
-      } else {
+                                     FieldSite_poly$siteDescription[i])
+                      )}
+      else {
         map <- map %>%
           addPolygons(lng = FieldSite_poly$coordinates[[i]][[1]][,1],
                       lat = FieldSite_poly$coordinates[[i]][[1]][,2],
                       popup = paste0("Boundaries for ",
-                                     FieldSite_poly$siteDescription[i]
-                                     )
-                     
+                                     FieldSite_poly$siteDescription[i])
           )}
     }
       map
-    
 
   })
     
@@ -161,10 +157,7 @@ function(input, output, session) {
                  group = "Sanimal",
                  clusterOptions = markerClusterOptions())
   })
-  
-  
-  
-  #Allow user to filter drone data
+  # Allow user to filter drone data
   Drone_filtered_NEON_only <- reactive({
     if (input$only_neon) {
       drone_data[(!(drone_data$neonSiteCode %in% NA)),]
@@ -188,6 +181,7 @@ function(input, output, session) {
                                 Drone_filtered_NEON()$altitude, " m"),
                  group = "Drone",
                  icon = drone_image_icon) %>%
+      # Added polygon drawer, but has no functionality at the moment
       leaflet.extras::addDrawToolbar(targetGroup = "Drone",
                                      polylineOptions = FALSE, rectangleOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
                                      editOptions = leaflet.extras::editToolbarOptions())
@@ -195,7 +189,7 @@ function(input, output, session) {
   
   ####INPUT FILE TAB####
   
-  # Input files test
+  # Get info for input files (Point GEOJSON only!!)
   user_file_info <- reactive({
     input$user_input_file
   })
@@ -205,12 +199,14 @@ function(input, output, session) {
   user_file_read <- reactive({
     readOGR(user_file_info()$datapath)
   })
+  # Display input file in "Input File" tab
   output$contents <- renderTable({
     if (is.null(user_file_info())) {
       return(NULL)
     }
     user_file_read()
   })
+  # Add user file to map, create legend
   observeEvent(input$add_user_file, legend$group <- c(legend$group, user_file_name()))
   observeEvent(input$add_user_file,
                if (!is.null(input$user_input_file)) {
@@ -221,20 +217,22 @@ function(input, output, session) {
                                     options = layersControlOptions(collapsed = FALSE)) 
                }
                )
-
   
   ####SANIMAL DATA TAB####
   
+  # Display data via table
   output$Sanimal_table <- renderTable(Sanimal_filtered_data())
   
   ####DRONE DATA TAB####
   
+  #Display data via table
   output$Drone_table <- renderTable(Drone_filtered_NEON())
   
   ####FOR ME TAB####
   
-  #output$text_me <- renderText(
-  #  paste0(is.null(input$user_input_file)))
+  #Text for troublshooting
+  #output$text_me <- renderText()
   
-  output$table_me <- renderTable(Drone_filtered_NEON())
+  #Table for troubleshooting
+  #output$table_me <- renderTable()
 }

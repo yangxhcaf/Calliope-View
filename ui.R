@@ -2,12 +2,13 @@ library(shiny)
 library(shinythemes)
 library(leaflet)
 
-fluidPage(theme = shinytheme("cerulean"),
+fluidPage(theme = shinytheme('cerulean'),
           tags$a(href = "https://github.com/Danielslee51/Calliope-View", tags$b("Github")),
           tags$br(),
           tags$a(href = "https://icons8.com", tags$b("Icon pack by Icons8")),
           navbarPage(tags$b("Calliope-View"),
                      id='nav',
+                     ####Tab 1: Includes the map, and key with features like filtering data####
                      tabPanel("Interactive Map",
                               sidebarLayout(
                                 sidebarPanel(width = 4,
@@ -33,23 +34,26 @@ fluidPage(theme = shinytheme("cerulean"),
                                   )
                               )
                      ),
+                     ####Tab 2: Description of project + contributors####
                      tabPanel("About the Calliope Project",
                               tabsetPanel(
                                 tabPanel("About",
                                          includeMarkdown('About Calliope.Rmd')),
                                 tabPanel("Credits",
-                                         includeMarkdown('Credits.Rmd'))
-                              )
+                                         includeMarkdown('Credits.Rmd')))
                               ),
+                     ####Tab 3: Display contents of input file####
                      tabPanel("Input File",
                               tableOutput("contents")),
+                     ####Tab 4: Display contents of drone data####
                      tabPanel("Drone Data",
                               tableOutput("Drone_table")),
+                     ####Tab 4: Display contents of Sanimal data####
                      tabPanel("Sanimal Data",
                               tableOutput("Sanimal_table")),
+                     ####Tab 5: Includes outputs to help with testing or troubleshooting####
                      tabPanel("For me (troubleshooting)",
                               textOutput("text_me"),
                               tableOutput("table_me"))
-                     
           )
 )
