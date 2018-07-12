@@ -1,3 +1,4 @@
+install.packages(c("gglot2","leaflet","dpylr","tidyr","jsonlite","curl","lubridate","sf","rgdal"))
 library(ggplot2)
 library(leaflet)
 library(dplyr)
@@ -7,7 +8,6 @@ library(curl)
 library(lubridate)
 library(sf)
 library(rgdal)
-library(shinyjs)
 
 ####———MAP DATA———####
 
