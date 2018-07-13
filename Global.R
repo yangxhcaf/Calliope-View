@@ -1,7 +1,6 @@
 
 library(leaflet)
 library(dplyr)
-
 library(jsonlite)
 library(sf)
 library(rgdal)
