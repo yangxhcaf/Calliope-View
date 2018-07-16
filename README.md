@@ -5,8 +5,16 @@ This R Shiny app uses leaflet to display ecological data provided by [NEON](http
 
 [NEON](https://www.neonscience.org/) is a "continental-scale ecological observation facility" that provides open data on our ecosystems. [NEON](https://www.neonscience.org/) is the source that this app pulls from to get ecological data.
 ## Features
-
+The app offers a map, which displays items such as NEON sites and domains, alongside custom data which can be filtered and displayed based on multiple variables. Here is an example of Calliope View’s display of NEON sites and their boundaries:
+<br><br>
+<img src="Img/Calliope-View1.gif" height="450"/>
+<br><br>
+Here is a display of the user's ability to filter datasets via multiple varibales:
+<br><br>
+<img src="Img/Calliope-View2.gif" height="450"/>
+> The dataset being queried and shown describes animal locations because we originally used an animal dataset as placeholder for the drone data while it was being developed. The app no longer includes this data, but it is still useful in demonstrating the app, functionality.
 ## Use and Installation
+### Git
 To install, change the working directory on your shell to the desired directory, and clone from git:
 ``` bash
 cd /Desktop
@@ -14,4 +22,15 @@ git clone https://github.com/Danielslee51/Calliope-View/
 ```
 Then, run server.R in an R IDE (such as Rstudio).
 
-![](Img/RStudio.png)
+<img src="Img/RStudio.png" width="600"/>
+
+### Docker
+Alternatively, there is a [docker image](https://hub.docker.com/r/danielslee/calliope-view/) available to run this app.
+```bash
+docker pull danielslee/calliope-view
+```
+After pulling from Docker Hub, expose a port and run the image.
+``` bash
+docker run --rm -d -p 80:3838 danielslee/calliope-view
+```
+Then, access the app by visiting the host's exposed port: http://localhost:80/
