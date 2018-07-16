@@ -1,0 +1,30 @@
+FROM quantumobject/docker-shiny
+LABEL title = "Calliope View Shiny App"
+
+RUN apt-get update
+
+RUN apt-get install -y git \
+libproj-dev \
+libgdal-dev \
+libudunits2-dev \
+gdal-bin \
+libgdal-dev \
+python3-gdal \
+python-gdal \
+build-dep gdal
+
+RUN apt-get upgrade
+RUN wget http://download.osgeo.org/gdal/2.1.0/gdal-2.1.0.tar.gz
+RUN tar -xvzf gdal-2.1.0.tar.gz
+RUN rm gdal-2.1.0.tar.gz
+RUN cd gdal-2.1.0/
+RUN ./configure --prefix=/usr/
+RUN make
+RUN make install
+RUN cd swig/python
+RUN python setup.py install
+
+
+RUN Rscript -e 'install.packages(c("leaflet","dplyr","jsonlite","sf","rgdal","curl","Rcpp"))'
+
+COPY
