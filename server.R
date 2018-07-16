@@ -137,27 +137,6 @@ function(input, output, session) {
       proxy %>% setView(lng = -110.453707, lat = 31.681433, zoom = 9)
     }
   })
-  # Allow user to filter Sanimal data
-  Sanimal_filtered_data <- reactive({
-    Sanimal_data %>%
-      dplyr::filter(Sanimal_data$`Common Name` %in% input$Sanimal_species) %>%
-      dplyr::filter(between(Count, left = input$Sanimal_range[1], right = input$Sanimal_range[2]))
-  })
-  # Display filtered Sanimal data on map
-  observe({
-    proxy <- leafletProxy("map")
-    proxy %>%
-      clearGroup(group = "Sanimal") %>%
-      addMarkers(data = Sanimal_filtered_data(),
-                 popup = paste0("<strong> Species:  </strong>",
-                                Sanimal_filtered_data()$`Common Name`,
-                                "<br><strong> Scientific Name: </strong>",
-                                Sanimal_filtered_data()$`Scientific Name`,
-                                "<br><strong> Count: </strong>",
-                                Sanimal_filtered_data()$Count),
-                 group = "Sanimal",
-                 clusterOptions = markerClusterOptions())
-  })
   # Allow user to filter drone data
   Drone_filtered_NEON_only <- reactive({
     if (input$only_neon) {
@@ -218,11 +197,6 @@ function(input, output, session) {
                                     options = layersControlOptions(collapsed = FALSE)) 
                }
                )
-  
-  ####SANIMAL DATA TAB####
-  
-  # Display data via table
-  output$Sanimal_table <- renderTable(Sanimal_filtered_data())
   
   ####DRONE DATA TAB####
   

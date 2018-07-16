@@ -84,45 +84,6 @@ Walnut_Gulch <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/Walnut_Gulc
 WalnutGulch_Flux_Tower <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/WG_Flux_Tower_Locations.geojson')
 WalnutGulch_Flux_Tower_400m_Buffer <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/WG_Flux_Towers_Locations_400m_Buffer_Square.geojson')
 
-####Sanimal####
-## Retrieve animal images from Sanimal JSON
-Sanimal_JSON <- fromJSON('http://128.196.142.26:9200/metadata/_search?size=5000')
-Sanimal_species <- Sanimal_JSON$hits$hits$`_source`$imageMetadata$speciesEntries
-Sanimal_position <- Sanimal_JSON$hits$hits$`_source`$imageMetadata$location$position
-# Extract Lat/Long values from Sanimal position coordinates
-Latitude <- data.frame()
-Longitude <-data.frame()
-for (i in 1:length(Sanimal_species)) {
-  Latitude <- rbind(Latitude, data.frame("Latitude" = strsplit(Sanimal_position, ", ")[[i]][1]))
-  Longitude <- rbind(Longitude, data.frame("Longitude" = strsplit(Sanimal_position, ", ")[[i]][2]))
-}
-# Extract species data (common/sientific name, count) from species list
-Sanimal_commonname <- data.frame()
-Sanimal_scientificname <- data.frame()
-Sanimal_count <- data.frame()
-for (i in 1:length(Sanimal_species)) {
-  Sanimal_commonname <- rbind(Sanimal_commonname, data.frame("Common_name" = Sanimal_species[[i]]$species$commonName))
-  Sanimal_scientificname <- rbind(Sanimal_scientificname, data.frame("Scientific_name" = Sanimal_species[[i]]$species$scientificName))
-  Sanimal_count <- rbind(Sanimal_count, data.frame("Count" = Sanimal_species[[i]]$count))
-}
-# Create final data frame
-Sanimal_data <- as.data.frame(cbind("took" = Sanimal_JSON$took,
-                                    #"StoragePath" = Sanimal_JSON$hits$hits$`_source`$storagePath,
-                                    "Elevation" = Sanimal_JSON$hits$hits$`_source`$imageMetadata$location$elevation,
-                                    "Latitude" = as.numeric(as.character(Latitude$Latitude)),
-                                    "Longitude" = as.numeric(as.character(Longitude$Longitude)),
-                                    "Common Name" = as.character(Sanimal_commonname$Common_name),
-                                    "Scientific Name" = as.character(Sanimal_scientificname$Scientific_name),
-                                    "Count" = Sanimal_count$Count
-))
-# Class conversions, delete repeats
-Sanimal_data$Longitude <- as.numeric(as.character(Sanimal_data$Longitude))
-Sanimal_data$Latitude <- as.numeric(as.character(Sanimal_data$Latitude))
-Sanimal_data$Count <- as.numeric(as.character(Sanimal_data$Count))
-Sanimal_data$`Common Name` <- as.character(Sanimal_data$`Common Name`)
-Sanimal_data$`Scientific Name` <- as.character(Sanimal_data$`Scientific Name`)
-Sanimal_data <- unique(Sanimal_data)
-
 #### DRONE ####
 drone_json <- fromJSON('http://128.196.38.73:9200/metadata/_search?pretty')
 drone_data <- cbind(drone_json$hits$hits[names(drone_json$hits$hits)!="_source"],

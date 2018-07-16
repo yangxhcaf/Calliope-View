@@ -21,9 +21,6 @@ fluidPage(theme = shinytheme('cerulean'),
                                              actionButton("add_user_file", label = "Add file to map"),
                                              tags$br(),
                                              tags$br(),
-                                             tags$b("Filter Sanimal Data"),
-                                             selectInput(inputId = "Sanimal_species", label = "Choose species:", choices = unique(Sanimal_data$`Common Name`), selected = NA, multiple = TRUE),
-                                             sliderInput(inputId = "Sanimal_range", label = "Choose count range:", min = 1, max = max(Sanimal_data$Count), value = c(1,max(Sanimal_data$Count))),
                                              tags$b("Filter Drone Data"),
                                              checkboxInput(inputId = "only_neon", label = "Only include NEON"),
                                              selectInput(inputId = "Drone_site", label = "Filter by NEON Site", choices = unique(drone_data$neonSiteCode), selected = unique(drone_data$neonSiteCode), multiple = TRUE)
@@ -48,9 +45,6 @@ fluidPage(theme = shinytheme('cerulean'),
                      ####Tab 4: Display contents of drone data####
                      tabPanel("Drone Data",
                               tableOutput("Drone_table")),
-                     ####Tab 4: Display contents of Sanimal data####
-                     tabPanel("Sanimal Data",
-                              tableOutput("Sanimal_table")),
                      ####Tab 5: Includes outputs to help with testing or troubleshooting####
                      tabPanel("For me (troubleshooting)",
                               textOutput("text_me"),
