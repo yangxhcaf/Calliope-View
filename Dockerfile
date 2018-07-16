@@ -2,8 +2,7 @@ FROM rocker/shiny:latest
 LABEL title = "Calliope-View" maintainer = "Daniel Lee"
 
 # update shell, upgrade packages
-RUN apt-get update
-RUN apt-get -y dist-upgrade \
+RUN apt-get update && apt-get -y dist-upgrade
 
 # install git and dependencies for "sf" and "rgdal" packages
 RUN apt-get install -y git \
