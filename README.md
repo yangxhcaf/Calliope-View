@@ -14,4 +14,5 @@ git clone https://github.com/Danielslee51/Calliope-View/
 ```
 Then, run server.R in an R IDE (such as Rstudio).
 
-![](Img/RStudio.png)
+<img src="Img/Rstudio.png" height="600"/>
+
