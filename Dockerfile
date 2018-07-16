@@ -1,8 +1,9 @@
 FROM rocker/shiny:latest
 LABEL title = "Calliope-View" maintainer = "Daniel Lee"
 
-# update shell
-RUN apt-get update
+# update shell, upgrade packages
+RUN apt-get update && apt-get -y dist-upgrade \
+
 
 # install git and dependencies for "sf" and "rgdal" packages
 RUN apt-get install -y git \
@@ -11,18 +12,10 @@ libgdal-dev \
 libudunits2-dev
 
 # download packages needed for app
-RUN Rscript -e 'install.packages(c("leaflet","dplyr","jsonlite","sf","rgdal","curl"))'
+RUN Rscript -e 'install.packages(c("leaflet","leaflet.extras","shinythemes","dplyr","jsonlite","sf","rgdal","curl"))'
 
+# remove preexisting items in server directory
 RUN rm -rf /srv/shiny-server/* 
- 
-# Copy the source code of the app from my hard drive to the container (in this case we use the app "wordcloud" from http://shiny.rstudio.com/gallery/word-cloud.html)
 
-COPY . /srv/shiny-server/
-# change permission of the shiny folder where the app sits
-RUN chmod -R 777 /srv/shiny-server
-# Start the server with the container
-CMD ["Rscript", "/srv/shiny-server/test.R"]
-
-
-
-
+# get Calliope Shiny app, move into shiny-server
+RUN git clone https://github.com/Danielslee51/Calliope-View.git && mv Calliope-View/* /srv/shiny-server/
