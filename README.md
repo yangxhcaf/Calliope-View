@@ -16,6 +16,7 @@ git clone https://github.com/Danielslee51/Calliope-View/
 Then, run server.R in an R IDE (such as Rstudio).
 
 <img src="Img/RStudio.png" width="600"/>
+
 ### Docker
 Alternatively, there is a [docker image](https://hub.docker.com/r/danielslee/calliope-view/) available to run this app.
 ```bash
