@@ -7,11 +7,11 @@ This R Shiny app uses leaflet to display ecological data provided by [NEON](http
 ## Features
 The app offers a map, which displays items such as NEON sites and domains, alongside custom data which can be filtered and displayed based on multiple variables. Here is an example of Calliope View’s display of NEON sites and their boundaries:
 <br><br>
-<img src="Img/Calliope-View1.gif" height="450"/>
+<img src="Img/Calliope-View1.gif" height="500"/>
 <br><br>
 Here is a display of the user's ability to filter datasets via multiple varibales:
 <br><br>
-<img src="Img/Calliope-View2.gif" height="450"/>
+<img src="Img/Calliope-View2.gif" height="500"/>
 > The dataset being queried and shown describes animal locations because we originally used an animal dataset as placeholder for the drone data while it was being developed. The app no longer includes this data, but it is still useful in demonstrating the app, functionality.
 ## Use and Installation
 ### Git
