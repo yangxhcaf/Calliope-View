@@ -25,7 +25,9 @@ Then, run server.R in an R IDE (such as Rstudio).
 <img src="Img/RStudio.png" width="600"/>
 
 ### Docker
-Alternatively, there is a [docker image](https://hub.docker.com/r/danielslee/calliope-view/) available to run this app.
+Alternatively, access the app at http://128.196.142.101/.
+
+This link is launched by a [virtual machine](https://atmo.cyverse.org/) running the [docker image](https://hub.docker.com/r/danielslee/calliope-view/) to use this app. This image is also available:
 ```bash
 docker pull danielslee/calliope-view
 ```
@@ -34,3 +36,4 @@ After pulling from Docker Hub, expose a port and run the image.
 docker run --rm -d -p 80:3838 danielslee/calliope-view
 ```
 Then, access the app by visiting the host's exposed port: http://localhost:80/
+> This image is very large, measuring over 2 gigabytes. Due to this, I recommend using the link above.
