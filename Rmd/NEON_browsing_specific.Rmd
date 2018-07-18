@@ -1,0 +1,2 @@
+**Obtain a specific instance of a data product:** <br><br>
+This function downloads a file for a single data product, site, and year-month combination, allowing users to obtain smalerl and more specific NEON datasets. This functionality requires a product ID, which will need to be obtained via NEON's [search portal](http://data.neonscience.org/static/browse.html).

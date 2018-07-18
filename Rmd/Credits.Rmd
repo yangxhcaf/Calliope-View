@@ -1,0 +1,17 @@
+#### Calliope was created by a group of scientists at the [CyVerse lab](http://www.cyverse.org/) at the University of Arizona.
+<hr>
+
+<img src="../Img/Tyson.png" width = "150"/>
+<br><br>
+**Tyson Swetnam** is the big boss. He coaches rugby for U of A.
+<br><br>
+**(Images of David and Pooja)**
+<br><br>
+**David** and **Pooja** are the coolest people in CyVerse.
+<br><br>
+<img src="../Img/Daniel.png" width = "250"/>
+<br><br>
+**Daniel Lee** was an intern at the CyVerse lab during the Summer of 2018. He helped with the design of Calliope View, working under Tyson to develope the first versions of the app.
+<br>
+
+
