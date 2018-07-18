@@ -108,7 +108,7 @@ drone_data$Latitude <- as.numeric(drone_data$Latitude)
 drone_data <- drone_data[,!(names(drone_data) %in% c("position", "dateTaken", "hourTaken"))]
 drone_data <- drone_data[c("_id", "neonSiteCode", "Latitude", "Longitude", "altitude", "yearTaken", "monthTaken", "dayTaken", "timeTaken",
                            "dayOfYearTaken", "dayOfWeekTaken", "x", "y", "z", "roll", "pitch", "yaw",
-                           "collectionID", "storagePath", "storageType", "_type", "_index", "_score")]
+                           "collectionID", "storagePath", "_type", "_index", "_score")]
 drone_data <- unique(drone_data)
 
 ####———MAP ICONS———####
