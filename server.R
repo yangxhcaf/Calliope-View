@@ -29,19 +29,21 @@ function(input, output, session) {
                        ) %>%
       # Markers for NEON field site locations
       addMarkers(data = FieldSite_point,
-                popup = paste0("<strong>Site Name: </strong>",
-                              FieldSite_point$SiteName,
-                              "<br><strong>Region: </strong>",
-                              FieldSite_point$DomainName,
-                              "<br><strong>State: </strong>",
-                              FieldSite_point$Full_State,
-                              "<br><strong>Host: </strong>",
-                              FieldSite_point$SiteHost),
-                clusterOptions = markerClusterOptions(),
-                label = paste0(FieldSite_point$SiteName),
-                icon = NEON_icon
-                ) %>%
-
+                 lng = FieldSite_point$siteLongitude,
+                 lat = FieldSite_point$siteLatitude,
+                 popup = paste0("<strong>Site Name: </strong>",
+                                FieldSite_point$siteDescription, " (",
+                                FieldSite_point$siteCode, ")",
+                                "<br><strong>Region: </strong>",
+                                FieldSite_point$domainName,
+                                "<br><strong>State: </strong>",
+                                FieldSite_point$stateName,
+                                "<br><strong>Site Type: </strong>",
+                                FieldSite_point$siteType),
+                 clusterOptions = markerClusterOptions(),
+                 label = paste0(FieldSite_point$siteDescription),
+                 icon = NEON_icon
+                 ) %>%
       # Polygons for NEON domains (green)
       addPolygons(data = domain_data,
                   weight = 2,
@@ -133,10 +135,9 @@ function(input, output, session) {
   # Allow zooming in on Santa Rita Region
   observe({
     proxy <- leafletProxy("map")
-    if (input$SR_center) {
-      proxy %>% setView(lng = -110.453707, lat = 31.681433, zoom = 9)
-    }
+    observeEvent(input$SR_center, proxy %>% setView(lng = -110.453707, lat = 31.681433, zoom = 9))
   })
+  
   # Allow user to filter drone data
   Drone_filtered_NEON_only <- reactive({
     if (input$only_neon) {
@@ -146,9 +147,14 @@ function(input, output, session) {
     }
   })
   Drone_filtered_NEON <- reactive({
+    if (is.na(unique(drone_data$neonSiteCode))) {
+      Drone_filtered_NEON_only()
+    } else {
     Drone_filtered_NEON_only() %>%
       dplyr::filter(Drone_filtered_NEON_only()$neonSiteCode %in% input$Drone_site)
+    }
   })
+  
   # Display filtered Drone data on map
   observe({
     proxy <- leafletProxy("map")
@@ -158,7 +164,9 @@ function(input, output, session) {
                  popup = paste0("<b>Date taken: </b>",
                                 Drone_filtered_NEON()$yearTaken, "/", Drone_filtered_NEON()$monthTaken, "/", Drone_filtered_NEON()$dayTaken,
                                 "<br><b>Altitude: </b>",
-                                Drone_filtered_NEON()$altitude, " m"),
+                                Drone_filtered_NEON()$altitude, " m",
+                                "<br><b>NEON site (if applicable): </b>",
+                                Drone_filtered_NEON()$neonSiteCode),
                  group = "Drone",
                  icon = drone_image_icon) %>%
       # Added polygon drawer, but has no functionality at the moment
@@ -166,6 +174,32 @@ function(input, output, session) {
                                      polylineOptions = FALSE, rectangleOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
                                      editOptions = leaflet.extras::editToolbarOptions())
   })
+  
+  # Browse NEON data: general
+  Product_ID_general <- reactive(input$dpID_general)
+  Product_ID_specific <- reactive(input$dpID_specific)
+  Field_Site_general <- reactive(
+    if (input$location_NEON_general == "All (default)") {
+      "all"
+    } else {
+      input$location_NEON_general
+    })
+  Field_Site_specific <- reactive(input$location_NEON_specific)
+  Date_specific_long <- reactive(as.character(input$date_NEON))
+  Date_specific_parts <- reactive(strsplit(Date_specific_long(), "-")[[1]])
+  Date_specific <- reactive(paste0(Date_specific_parts()[1], "-", Date_specific_parts()[2]))
+  # Download NEON data: general
+  observeEvent(input$download_NEON_general,
+               if (TRUE) {
+                 zipsByProduct(dpID = Product_ID_general(), site = Field_Site_general(), check.size = FALSE, savepath = '..')
+               }
+               )
+  # Download NEON data: specific
+  observeEvent(input$download_NEON_specific,
+               if (!is.null(Product_ID_specific()) & !is.null(Field_Site_specific()) & !is.null(Date_specific())) {
+                 getPackage(dpID = Product_ID_specific(), site_code = Field_Site_specific(), year_month = Date_specific(), savepath = '..')
+                 }
+               )
   
   ####INPUT FILE TAB####
   
@@ -200,13 +234,13 @@ function(input, output, session) {
   
   ####DRONE DATA TAB####
   
-  #Display data via table
+  # Display data via table
   output$Drone_table <- renderTable(Drone_filtered_NEON())
   
   ####FOR ME TAB####
   
   #Text for troublshooting
-  #output$text_me <- renderText()
+  output$text_me <- renderText(Date_specific())
   
   #Table for troubleshooting
   #output$table_me <- renderTable()

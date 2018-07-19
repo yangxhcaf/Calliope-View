@@ -7,11 +7,15 @@ library(rgdal)
 
 ####———MAP DATA———####
 
+
+
+
 ###NEON Field Sites####
 ## Retrieve point data for NEON Field Sites in JSON format
-FieldSite_point_JSON <- fromJSON('NEON_data/NEON_Field_Sites.json')
+
+FieldSite_point_JSON <- fromJSON('http://data.neonscience.org/api/v0/sites') #'NEON_data/NEON_Field_Sites.json'
 # Create a data frame usaing cbind()
-FieldSite_point <- cbind(FieldSite_point_JSON$features$properties,FieldSite_point_JSON$features$geometry)
+FieldSite_point <- FieldSite_point_JSON$data #cbind(FieldSite_point_JSON$features$properties,FieldSite_point_JSON$features$geometry)
 ## Retrieve polygon data for NEON Field Sites
 FieldSite_poly_JSON <- fromJSON('http://128.196.38.73:9200/neon_sites/_search?pretty')
 FieldSite_poly <- cbind(FieldSite_poly_JSON$hits$hits$`_source`$site, FieldSite_poly_JSON$hits$hits$`_source`$boundary)
@@ -29,7 +33,7 @@ domain_data <- st_read('NEON_data/NEON_Domains.json')
 ####NEON Flightpaths####
 ## Retrieve info for NEON flightpaths
 # Get human info about flightpaths
-domain_table <- data.frame("Abb"=c("BART","HARV","BLAN","SCBI","SERC","DSNY","JERC","OSBS","STEI-CHEQ","STEI-TREE","UNDE","KONZ-KONA","GRSM","MLBS","ORNL","DELA","LENO","TALL","DCFS-WOOD","NOGP","CLBJ","OAES"),
+FieldSite_table <- data.frame("Abb"=c("BART","HARV","BLAN","SCBI","SERC","DSNY","JERC","OSBS","STEI-CHEQ","STEI-TREE","UNDE","KONZ-KONA","GRSM","MLBS","ORNL","DELA","LENO","TALL","DCFS-WOOD","NOGP","CLBJ","OAES"),
                            "Site"=c("Bartlett Experimental Forest North-South flight box", "Harvard Forest flight box","Blandy Experimental Farm flight box","Smithsonian Conservation Biology Institute flight box","Smithsonian Ecological Research Center flight box","Disney Wilderness Preserve flight box","Jones Ecological Research Center Priority 1 flight box","Ordway-Swisher Biological Station Priority 1 flight box","Chequamegon-Nicolet National Forest flight box","Steigerwaldt-Treehaven Priority 2 flight box","UNDERC flight box","Konza Prairie Biological Station and KONA agricultural site flight box","Great Smoky Mountains National Park priority 2 flight box","Mountain Lake Biological Station flight box","Oak Ridge National Laboratory flight box","Dead Lake flight box","Lenoir Landing flight box","Talladega National Forest flight box","Woodworth and Dakota Coteau Field School flight box","Northern Great Plains flight box","LBJ Grasslands flight box","Klemme Range Research Station flight box"))
 CR_table <- data.frame("Abb"=c(as.character("C"),as.character("R")),"Actual"=c(as.character("Core"),as.character("Relocatable")))
 # filesnames needed for loopz
@@ -56,7 +60,7 @@ for (file in flight_filenames_all) {
   # 1
   file_info <- cbind("Name" = name_part,
                      "DomainID" = domain_part,
-                     "Site" = as.character(domain_table$Site[domain_table$Abb %in% site_part]),
+                     "Site" = as.character(FieldSite_table$Site[FieldSite_table$Abb %in% site_part]),
                      "Core or Relocatable"= paste0(CR_table[grep(RC_part_type,CR_table$Abb),2], " #", RC_part_num),
                      "Priority" = priority_part,
                      "Version" = version_part)

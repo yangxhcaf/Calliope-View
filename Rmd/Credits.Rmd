@@ -13,5 +13,3 @@
 <br><br>
 **Daniel Lee** was an intern at the CyVerse lab during the Summer of 2018. He helped with the design of Calliope View, working under Tyson to develope the first versions of the app.
 <br>
-
-
