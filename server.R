@@ -175,30 +175,57 @@ function(input, output, session) {
                                      editOptions = leaflet.extras::editToolbarOptions())
   })
   
-  # Browse NEON data: general
-  Product_ID_general <- reactive(input$dpID_general)
-  Product_ID_specific <- reactive(input$dpID_specific)
-  Field_Site_general <- reactive(
+  # NEON: Step 1- Find/Download Data
+  Product_ID_general <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_general)))
+  Product_ID_specific <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_specific)))
+  Field_Site_general <- reactive(req(
     if (input$location_NEON_general == "All (default)") {
       "all"
     } else {
       input$location_NEON_general
     })
-  Field_Site_specific <- reactive(input$location_NEON_specific)
-  Date_specific_long <- reactive(as.character(input$date_NEON))
-  Date_specific_parts <- reactive(strsplit(Date_specific_long(), "-")[[1]])
-  Date_specific <- reactive(paste0(Date_specific_parts()[1], "-", Date_specific_parts()[2]))
+    )
+  Field_Site_specific <- reactive(req(input$location_NEON_specific))
+  Package_type_general <- reactive(req(input$package_type_general))
+  Package_type_specific <- reactive(req(input$package_type_specific))
+  Date_specific_long <- reactive(req(as.character(input$date_NEON)))
+  Date_specific_parts <- reactive(req(strsplit(Date_specific_long(), "-")[[1]]))
+  Date_specific <- reactive(req(paste0(Date_specific_parts()[1], "-", Date_specific_parts()[2])))
+  Folder_path_specific <- reactive(paste0("../NEON_", Field_Site_specific(), "_", Date_specific()))
   # Download NEON data: general
   observeEvent(input$download_NEON_general,
-               if (TRUE) {
-                 zipsByProduct(dpID = Product_ID_general(), site = Field_Site_general(), check.size = FALSE, savepath = '..')
-               }
+               zipsByProduct(dpID = Product_ID_general(), site = Field_Site_general(), package = Package_type_general(), check.size = FALSE, savepath = '..') &
+                 sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
                )
-  # Download NEON data: specific
+  # Download NEON data: specific — creates a folder and adds files to folder
   observeEvent(input$download_NEON_specific,
-               if (!is.null(Product_ID_specific()) & !is.null(Field_Site_specific()) & !is.null(Date_specific())) {
-                 getPackage(dpID = Product_ID_specific(), site_code = Field_Site_specific(), year_month = Date_specific(), savepath = '..')
-                 }
+               dir.create(path = Folder_path_specific()) &
+                 getPackage(dpID = Product_ID_specific(), site_code = Field_Site_specific(), year_month = Date_specific(), package = Package_type_specific(), savepath = Folder_path_specific()) &
+                 sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
+               )
+  # NEON: Step 2- Unzip/Join Downloads
+  NEON_filepath <- reactive(input$NEON_unzip_file$datapath)
+  NEON_folder_path <- reactive(req(readDirectoryInput(session, 'directory')))
+  # Server function needed by directoryInput (https://github.com/wleepang/shiny-directory-input)
+  observeEvent(
+    ignoreNULL = TRUE,
+    eventExpr = {
+      input$directory
+    },
+    handlerExpr = {
+      if (input$directory > 0) {
+        # condition prevents handler execution on initial app launch
+        # launch the directory selection dialog with initial path read from the widget
+        path = choose.dir(default = readDirectoryInput(session, 'directory'))
+        # update the widget value
+        updateDirectoryInput(session, 'directory', value = path)
+      }
+    }
+  )
+  # Unzip data: general
+  observeEvent(input$unzip_NEON_folder,
+               stackByTable(filepath = NEON_folder_path(), folder = TRUE) &
+                 sendSweetAlert(session, title = "File unzipped", text = "The outer appearance of the folder should be the same. On the inside, there should be a new folder called 'stackedFiles' which contains the datasets.", type = "success")
                )
   
   ####INPUT FILE TAB####
@@ -240,8 +267,9 @@ function(input, output, session) {
   ####FOR ME TAB####
   
   #Text for troublshooting
-  output$text_me <- renderText(Date_specific())
-  
+  output$text_me <- renderText(Folder_path_specific())
+  #Text for troublshooting 2
+  output$text_me_two <- renderText("")
   #Table for troubleshooting
-  #output$table_me <- renderTable()
+  output$table_me <- renderTable(input$NEON_unzip_file)
 }

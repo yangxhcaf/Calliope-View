@@ -2,4 +2,4 @@
 
 Download NEON data products without filtering over time or location (although location can be filtered). This functionality requires a product ID, which will need to be obtained via NEON's [search portal](http://data.neonscience.org/static/browse.html). Optionally, one NEON site can be selected.
 
-The items will appear as a folder starting with "filesToStack" with numbers at the end, located in the directory one above "Calliope View". This download might take a while, and progess can be tracked on the console if the app is launched from RStudio.
+The items will appear in a folder starting with **filesToStack**, located in the directory one above **Calliope View**. These items are zipped and need to be put through step 2.
