@@ -82,16 +82,6 @@ for (file in flight_filenames[-1]) {
 # Final data table
 flight_data <- data.frame(flight_info, flight_geo)
 
-####Santa Rita Range####
-## Retrieve data from Santa Rita range
-ARS_Flume <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/ARS_Flume.geojson')
-PAG <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/PAG_2011_LiDAR_Township_and_Range_Sections.geojson')
-SantaRita_Exp_Range <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/Santa_Rita_Experimental_Range_Boundary.geojson')
-SantaRita_Flux_Tower <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/SantaRita_Flux_Tower_Locations.geojson')
-Walnut_Gulch <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/Walnut_Gulch_Subwatersheds.geojson')
-WalnutGulch_Flux_Tower <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/WG_Flux_Tower_Locations.geojson')
-WalnutGulch_Flux_Tower_400m_Buffer <- st_read('Walnut_Gulch__Santa_Rita_Experimental_Range/WG_Flux_Towers_Locations_400m_Buffer_Square.geojson')
-
 #### DRONE ####
 drone_json <- fromJSON('http://128.196.38.73:9200/metadata/_search?pretty')
 drone_data <- cbind(drone_json$hits$hits[names(drone_json$hits$hits)!="_source"],
@@ -124,15 +114,6 @@ NEON_icon <- makeIcon(iconUrl = "Img/NEON.png",
                       iconWidth = 30, iconHeight = 30,
                       iconAnchorX = 15, iconAnchorY = 15,
                       popupAnchorX = -1, popupAnchorY = -15)
-nut_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/nut.png",
-                     iconWidth = 30, iconHeight = 30,
-                     iconAnchorX = 0, iconAnchorY = 0)
-tower_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/water-tower.png",
-                       iconWidth = 30, iconHeight = 30,
-                       iconAnchorX = 0, iconAnchorY = 0)
-flume_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/creek.png",
-                       iconWidth = 30, iconHeight = 30,
-                       iconAnchorX = 0, iconAnchorY = 0)
 drone_image_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/map-pin.png",
                              iconAnchorX = 24, iconAnchorY = 48,
                              popupAnchorX = -1, popupAnchorY = -48)

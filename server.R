@@ -4,7 +4,7 @@ function(input, output, session) {
   ####INTERACTIVE MAP TAB####
   
   # Reactive value for layer control
-  legend <- reactiveValues(group = "LiDAR")
+  legend <- reactiveValues(group = c("Drone", "Field Sites", "Domains", "Flightpaths"))
   
   # Map
   output$map <- renderLeaflet({
@@ -15,7 +15,8 @@ function(input, output, session) {
                        options = providerTileOptions(noWrap = TRUE)
                        ) %>%
       # Add measuring tool
-      addMeasure(primaryLengthUnit = "kilometers",
+      addMeasure(position = "topleft",
+                 primaryLengthUnit = "kilometers",
                  primaryAreaUnit = "sqmeters",
                  activeColor = "#3D535D",
                  completedColor = "#7D4479"
@@ -30,6 +31,7 @@ function(input, output, session) {
       addMarkers(data = FieldSite_point,
                  lng = FieldSite_point$siteLongitude,
                  lat = FieldSite_point$siteLatitude,
+                 group = "Field Sites",
                  popup = paste0("<strong>Site Name: </strong>",
                                 FieldSite_point$siteDescription, " (",
                                 FieldSite_point$siteCode, ")",
@@ -47,12 +49,14 @@ function(input, output, session) {
       addPolygons(data = domain_data,
                   weight = 2,
                   fillOpacity = '0.05',
+                  group = "Domains",
                   popup = paste0(domain_data$DomainName),
                   color = "green"
                   ) %>%
       # Areas for NEON flight paths (purple)
       addPolygons(data = flight_data$geometry,
                   color = "purple",
+                  group = "Flightpaths",
                   popup = paste0("<strong>Site: </strong><br>",
                                  flight_data$Site,
                                  "<br><strong>Domain: </strong>",
@@ -63,51 +67,6 @@ function(input, output, session) {
                                  flight_data$Priority,
                                  "<br><strong>Version: </strong>",
                                  flight_info$Version)
-                  ) %>%
-      # Markers for ARS flume locations (stream of water icon)
-      addMarkers(data = ARS_Flume,
-                 popup = paste0(ARS_Flume$WS_ID,
-                                "<br>Elevation= ",
-                                as.numeric(as.character(ARS_Flume$Elevation)),
-                                " m"),
-                 icon = flume_icon
-                 ) %>%
-      # Boundary for PAG 2011 LiDAR Township and Range Sections (red)
-      addPolygons(data = PAG,
-                  weight = 2,
-                  group = "LiDAR",
-                  color = "red",
-                  popup = paste0("PAG 2011 LiDAR Township and Range Sections")
-                  ) %>%
-      # Boundary for Santa Rita Experimental Range (orange)
-      addPolygons(data = SantaRita_Exp_Range,
-                  weight = 3,
-                  color = "orange",
-                  popup = paste0("Santa Rita Experimental Range")
-                  ) %>%
-      # Markers for Santa Rita flux tower locations (tower icon)
-      addMarkers(data = SantaRita_Flux_Tower,
-                 popup = paste0(SantaRita_Flux_Tower$Name),
-                 icon = tower_icon,
-                 clusterOptions = NULL #markerClusterOptions()
-                 ) %>%
-      # Boundaries for Walnut Gulch subwatersheds
-      addPolygons(data = Walnut_Gulch,
-                  weight=3,
-                  color = "yellow",
-                  popup = paste0("Walnut Gulch Subwatersheds")
-                  ) %>%
-      # Markers for Walnut Gulch flux tower locations (nut icon)
-      addMarkers(data = WalnutGulch_Flux_Tower,
-                 popup = paste0(WalnutGulch_Flux_Tower$Name),
-                 icon = nut_icon,
-                 clusterOptions = NULL #markerClusterOptions()
-                 ) %>%
-      # Area around Walnuyt Gulch towers (brown)
-      addPolygons(data = WalnutGulch_Flux_Tower_400m_Buffer,
-                  weight = 2,
-                  color = "brown",
-                  popup = paste0(WalnutGulch_Flux_Tower_400m_Buffer$Name)
                   )
     )
     # Add polygon boundaries for field sites (blue)
@@ -116,6 +75,7 @@ function(input, output, session) {
         map <- map %>%
           addPolygons(lng = FieldSite_poly$coordinates[[i]][1,,1],
                       lat = FieldSite_poly$coordinates[[i]][1,,2],
+                      group = "Field Sites",
                       popup = paste0("Boundaries for ",
                                      FieldSite_poly$siteDescription[i])
                       )
@@ -123,6 +83,7 @@ function(input, output, session) {
         map <- map %>%
           addPolygons(lng = FieldSite_poly$coordinates[[i]][[1]][,1],
                       lat = FieldSite_poly$coordinates[[i]][[1]][,2],
+                      group = "Field Sites",
                       popup = paste0("Boundaries for ",
                                      FieldSite_poly$siteDescription[i])
           )}
