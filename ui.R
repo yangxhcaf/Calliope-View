@@ -2,12 +2,12 @@ fluidPage(theme = shinytheme('cerulean'),
           tags$a(href = "https://github.com/Danielslee51/Calliope-View", tags$b("Github")),
           tags$br(),
           tags$a(href = "https://icons8.com", tags$b("Icon pack by Icons8")),
+          title = ("Calliope View"),
           navbarPage(tags$b("Calliope-View"),
-                     id='nav',
                      ####Tab 1: Includes the map, and key with features like filtering data####
                      tabPanel("Interactive Map",
                               sidebarLayout(
-                                sidebarPanel(width = 4,
+                                sidebarPanel(width = 5,
                                              #tags$b("Zoom to:"),
                                              #tags$br(),
                                              #actionButton(inputId = "SR_center", label = "Santa Rita Mountains", width = '70%'),
@@ -22,9 +22,7 @@ fluidPage(theme = shinytheme('cerulean'),
                                              tags$h4("Browse NEON Data:"),
                                              tabsetPanel(
                                                tabPanel("Step 1- Find/Download Data",
-                                                        tags$br(),
                                                         radioButtons(inputId = "NEON_browsing_choices", label = "Browsing method", choices = list("By Data Product— General" = "general", "By Data Product— Specific" = "specific", "By Data Product— Manual" = "manual")),
-                                                        tags$hr(),
                                                         conditionalPanel("input.NEON_browsing_choices == 'general'",
                                                                          includeMarkdown('Rmd/NEON_browsing_general.Rmd'),
                                                                          textInput(inputId = "dpID_general", label = "Product ID"),
@@ -56,19 +54,19 @@ fluidPage(theme = shinytheme('cerulean'),
                                                         tags$hr(),
                                                         conditionalPanel("input.NEON_unzip_type == 'general/specific'",
                                                                          includeMarkdown('Rmd/NEON_unzip_general:specific.Rmd'),
-                                                                         directoryInput('directory', label = 'Select the directory', value = '..'),
+                                                                         directoryInput('NEON_unzip_folder', label = 'Select the directory', value = '..'),
                                                                          actionButton(inputId = "unzip_NEON_folder", label = "Unzip/join folder")
                                                                          ),
                                                         conditionalPanel("input.NEON_unzip_type == 'manual'",
                                                                          includeMarkdown('Rmd/NEON_unzip_manual.Rmd'),
-                                                                         fileInput(inputId = "NEON_unzip_file", label = "File from step 1", accept = "application/zip"),
+                                                                         selectInput(inputId = 'NEON_unzip_file', label = "Choose .zip file", choices = list.files(path = '..', pattern = "zip")),
                                                                          actionButton(inputId = "unzip_NEON_file", label = "Unzip/join file")
                                                                          )
                                                         )
                                                )
                                              ),
                                              
-                                mainPanel(
+                                mainPanel(width = 7,
                                   leafletOutput(outputId = "map", width = '100%', height = '600px')
                                   )
                               )

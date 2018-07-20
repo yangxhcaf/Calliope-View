@@ -3,17 +3,14 @@ function(input, output, session) {
   
   ####INTERACTIVE MAP TAB####
   
-  
   # Reactive value for layer control
   legend <- reactiveValues(group = "LiDAR")
   
-  
+  # Map
   output$map <- renderLeaflet({
-    
-    basemap <- leaflet()
-    
+
     map <- (
-    basemap %>%
+    leaflet() %>%
       addProviderTiles(provider = providers$OpenStreetMap.Mapnik,
                        options = providerTileOptions(noWrap = TRUE)
                        ) %>%
@@ -27,6 +24,8 @@ function(input, output, session) {
       addLayersControl(overlayGroups = legend$group,
                        options = layersControlOptions(collapsed = FALSE)
                        ) %>%
+      # Add option for fullscreen
+      leaflet.extras::addFullscreenControl(pseudoFullscreen = TRUE) %>%
       # Markers for NEON field site locations
       addMarkers(data = FieldSite_point,
                  lng = FieldSite_point$siteLongitude,
@@ -119,20 +118,19 @@ function(input, output, session) {
                       lat = FieldSite_poly$coordinates[[i]][1,,2],
                       popup = paste0("Boundaries for ",
                                      FieldSite_poly$siteDescription[i])
-                      )}
-      else {
+                      )
+        } else {
         map <- map %>%
           addPolygons(lng = FieldSite_poly$coordinates[[i]][[1]][,1],
                       lat = FieldSite_poly$coordinates[[i]][[1]][,2],
                       popup = paste0("Boundaries for ",
                                      FieldSite_poly$siteDescription[i])
           )}
-    }
+      }
       map
-
   })
     
-  # Allow zooming in on Santa Rita Region
+  # Allow zooming in on Santa Rita Region, currenly disabled by hashtags in Ui
   observe({
     proxy <- leafletProxy("map")
     observeEvent(input$SR_center, proxy %>% setView(lng = -110.453707, lat = 31.681433, zoom = 9))
@@ -147,11 +145,11 @@ function(input, output, session) {
     }
   })
   Drone_filtered_NEON <- reactive({
-    if (is.na(unique(drone_data$neonSiteCode))) {
+    if (is.na(unique(drone_data$neonSiteCode)) & length(drone_data$neonSiteCode)==1) {
       Drone_filtered_NEON_only()
     } else {
     Drone_filtered_NEON_only() %>%
-      dplyr::filter(Drone_filtered_NEON_only()$neonSiteCode %in% input$Drone_site)
+      dplyr::filter(Drone_filtered_NEON_only()$neonSiteCode %in% c(NA, input$Drone_site))
     }
   })
   
@@ -168,11 +166,11 @@ function(input, output, session) {
                                 "<br><b>NEON site (if applicable): </b>",
                                 Drone_filtered_NEON()$neonSiteCode),
                  group = "Drone",
-                 icon = drone_image_icon) %>%
-      # Added polygon drawer, but has no functionality at the moment
-      leaflet.extras::addDrawToolbar(targetGroup = "Drone",
-                                     polylineOptions = FALSE, rectangleOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
-                                     editOptions = leaflet.extras::editToolbarOptions())
+                 icon = drone_image_icon) #%>%
+      # Added polygon drawer, but has no functionality at the moment (took out)
+#      leaflet.extras::addDrawToolbar(targetGroup = "Drone",
+#                                     polylineOptions = FALSE, rectangleOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
+#                                     editOptions = leaflet.extras::editToolbarOptions())
   })
   
   # NEON: Step 1- Find/Download Data
@@ -204,32 +202,32 @@ function(input, output, session) {
                  sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
                )
   # NEON: Step 2- Unzip/Join Downloads
-  NEON_filepath <- reactive(input$NEON_unzip_file$datapath)
-  NEON_folder_path <- reactive(req(readDirectoryInput(session, 'directory')))
+  NEON_folder_path <- reactive(req(readDirectoryInput(session, 'NEON_unzip_folder')))
+  NEON_file_name <- reactive(req(input$NEON_unzip_file))
+  NEON_file_path <- reactive(req(paste0("../", NEON_file_name())))
   # Server function needed by directoryInput (https://github.com/wleepang/shiny-directory-input)
-  observeEvent(
-    ignoreNULL = TRUE,
-    eventExpr = {
-      input$directory
-    },
+  observeEvent(ignoreNULL = TRUE,
+    eventExpr = {input$NEON_unzip_folder},
     handlerExpr = {
-      if (input$directory > 0) {
-        # condition prevents handler execution on initial app launch
-        # launch the directory selection dialog with initial path read from the widget
-        path = choose.dir(default = readDirectoryInput(session, 'directory'))
+      if (input$NEON_unzip_folder > 0) {
+        # condition prevents handler execution on initial app launch, launch the directory selection dialog with initial path read from the widget
+        path = choose.dir(default = readDirectoryInput(session, 'NEON_unzip_folder'))
         # update the widget value
-        updateDirectoryInput(session, 'directory', value = path)
-      }
-    }
-  )
-  # Unzip data: general
+        updateDirectoryInput(session, 'NEON_unzip_folder', value = path)}
+      })
+  # Unzip data: general/specific
   observeEvent(input$unzip_NEON_folder,
                stackByTable(filepath = NEON_folder_path(), folder = TRUE) &
                  sendSweetAlert(session, title = "File unzipped", text = "The outer appearance of the folder should be the same. On the inside, there should be a new folder called 'stackedFiles' which contains the datasets.", type = "success")
                )
+  # Unzip data: manual
+  observeEvent(input$unzip_NEON_file,
+               stackByTable(filepath = NEON_file_path(), folder = FALSE) &
+                 sendSweetAlert(session, title = "File unzipped", text = paste0("There should now be a new folder titled '", strsplit(NEON_file_name(), ".zip")[[1]][1], "' with all of the datasets."), type = "success")
+               )
   
   ####INPUT FILE TAB####
-  
+  # Currently disabled by hashtags in Ui
   # Get info for input files (Point GEOJSON only!!)
   user_file_info <- reactive({
     input$user_input_file
@@ -267,9 +265,9 @@ function(input, output, session) {
   ####FOR ME TAB####
   
   #Text for troublshooting
-  output$text_me <- renderText(Folder_path_specific())
+  output$text_me <- renderText("Current directory: (this should be Calliope-View)")
   #Text for troublshooting 2
-  output$text_me_two <- renderText("")
+  output$text_me_two <- renderText(getwd())
   #Table for troubleshooting
-  output$table_me <- renderTable(input$NEON_unzip_file)
+  #output$table_me <- renderTable()
 }

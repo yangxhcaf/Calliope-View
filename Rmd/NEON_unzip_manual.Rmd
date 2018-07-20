@@ -1,1 +1,1 @@
-Input the **.zip** file that was downloaded from the NEON [search portal](http://data.neonscience.org/static/browse.html).
+Select the **.zip** file that was downloaded from the NEON [search portal](http://data.neonscience.org/static/browse.html). This is a list of the files in the directory containing **Calliope View**. If you cannot find your **.zip** file, make sure it is in the correct directory.

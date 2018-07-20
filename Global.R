@@ -7,7 +7,7 @@ library(sf)
 library(rgdal)
 library(neonUtilities)
 library(shinyWidgets)
-source('directoryInput.R')
+source('directoryWidget/directoryInput.R')
 
 ####———MAP DATA———####
 
