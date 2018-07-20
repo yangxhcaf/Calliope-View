@@ -1,0 +1,1 @@
+Input the **.zip** file that was downloaded from the NEON [search portal](http://data.neonscience.org/static/browse.html).
