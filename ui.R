@@ -61,7 +61,7 @@ fluidPage(theme = shinytheme('cerulean'),
                                                                          ),
                                                         conditionalPanel("input.NEON_unzip_type == 'manual'",
                                                                          includeMarkdown('Rmd/NEON_unzip_manual.Rmd'),
-                                                                         fileInput(inputId = "NEON_unzip_file", label = "File from step 1"),
+                                                                         fileInput(inputId = "NEON_unzip_file", label = "File from step 1", accept = "application/zip"),
                                                                          actionButton(inputId = "unzip_NEON_file", label = "Unzip/join file")
                                                                          )
                                                         )

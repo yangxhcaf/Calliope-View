@@ -6,6 +6,7 @@ library(jsonlite)
 library(sf)
 library(rgdal)
 library(neonUtilities)
+library(shinyWidgets)
 source('directoryInput.R')
 
 ####———MAP DATA———####
