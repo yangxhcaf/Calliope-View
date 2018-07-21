@@ -4,6 +4,8 @@ An interactive leaflet interface designed to display ecological data alongside d
 This R Shiny app uses leaflet to display ecological data provided by [NEON](https://www.neonscience.org/) alongside drone imaging under one map. Users will then be able to compare biological statistics such as precipitation, soil temperature, humidity, and pressure with their own data to generate analyses ranging from the effects of climate change to the relationship between geographical factors and the ecosystem.
 
 [NEON](https://www.neonscience.org/) is a "continental-scale ecological observation facility" that provides open data on our ecosystems. [NEON](https://www.neonscience.org/) is the source that this app pulls from to get ecological data.
+
+The drone data will be pulled from a global index in [Cyverse](http://www.cyverse.org/)'s [discovery environment](https://www.cyverse.org/discovery-environment) (DE). This includes a variety of sources, such as the DE drive, S3, and private servers.
 ## Features
 The app offers a map, which displays items such as NEON sites and domains, alongside custom data which can be filtered and displayed based on multiple variables. Here is an example of Calliope View’s display of NEON sites and their boundaries:
 <br><br>
@@ -20,20 +22,12 @@ To install, change the working directory on your shell to the desired directory,
 cd /Desktop
 git clone https://github.com/Danielslee51/Calliope-View/
 ```
-Then, run server.R in an R IDE (such as Rstudio).
+Then, run server.R in an R IDE (such as Rstudio). This app has to be run locally due to features that require the user's local filesystem.
 
 <img src="Img/RStudio.png" width="600"/>
 
-### Docker
-Alternatively, access the app at http://128.196.142.101/.
-
-This link is launched by a [virtual machine](https://atmo.cyverse.org/) running the [docker image](https://hub.docker.com/r/danielslee/calliope-view/) to use this app. This image is also available:
-```bash
-docker pull danielslee/calliope-view
-```
-After pulling from Docker Hub, expose a port and run the image.
-``` bash
-docker run --rm -d -p 80:3838 danielslee/calliope-view
-```
-Then, access the app by visiting the host's exposed port: http://localhost:80/
-> This image is very large, measuring over 2 gigabytes. Due to this, I recommend using the link above.
+### Packages
+This app requires a few packages that might need to be downloaded: <br>
+* [`neonUtilities`](https://github.com/NEONScience/NEON-utilities/tree/master/neonUtilities): This package is used to pull datasets from NEON.
+* [`shinyWidgets`](https://github.com/dreamRs/shinyWidgets): This provides costumized and "pimp[ed]" up widgets for shiny.
+* [`sf`](https://github.com/r-spatial/sf) and [`rgdal`](https://github.com/cran/rgdal): These provide access to simple feature geometries.
