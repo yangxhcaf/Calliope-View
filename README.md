@@ -28,6 +28,8 @@ Then, run server.R in an R IDE (such as Rstudio). This app has to be run locally
 
 ### Packages
 This app requires a few packages that might need to be downloaded: <br>
-* [`neonUtilities`](https://github.com/NEONScience/NEON-utilities/tree/master/neonUtilities): This package is used to pull datasets from NEON.
-* [`shinyWidgets`](https://github.com/dreamRs/shinyWidgets): This provides costumized and "pimp[ed]" up widgets for shiny.
-* [`sf`](https://github.com/r-spatial/sf) and [`rgdal`](https://github.com/cran/rgdal): These provide access to simple feature geometries.
+* [`leaflet`](https://github.com/rstudio/leaflet) and [`leaflet.extras`](https://github.com/bhaskarvk/leaflet.extras): These are responsible for the map and its features.
+* [`neonUtilities`](https://github.com/NEONScience/NEON-utilities/tree/master/neonUtilities): used to pull datasets from NEON.
+* [`shinyWidgets`](https://github.com/dreamRs/shinyWidgets): provides costumized and "pimp[ed]" up widgets for shiny.
+* [`sf`](https://github.com/r-spatial/sf) and [`rgdal`](https://github.com/cran/rgdal): provide access to simple feature geometries.
+* [`jsonlite`](https://github.com/cran/jsonlite): helps deal with JSON structures.
