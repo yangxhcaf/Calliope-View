@@ -24,7 +24,7 @@ git clone https://github.com/Danielslee51/Calliope-View/
 ```
 Then, run server.R in an R IDE (such as Rstudio). This app has to be run locally due to features that require the user's local filesystem.
 
-<img src="Img/RStudio.png" width="600"/>
+<img src="Img/RStudio.png" width="500"/>
 
 ### Packages
 This app requires a few packages that might need to be downloaded: <br>
