@@ -9,8 +9,7 @@ RUN apt-get install -y git \
 libproj-dev \
 libgdal-dev \
 libudunits2-dev \
-libssl-dev \
-openssl-devel
+libssl-dev
 
 # download packages needed for app
 RUN Rscript -e 'install.packages(c("leaflet","leaflet.extras","shinythemes","dplyr","jsonlite","sf","rgdal","curl", "shinyWidgets"))'
