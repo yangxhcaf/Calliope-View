@@ -14,7 +14,8 @@ libssl-dev
 # download packages needed for app
 RUN Rscript -e 'install.packages(c("leaflet","leaflet.extras","shinythemes","dplyr","jsonlite","sf","rgdal","curl", "shinyWidgets"))'
 
-RUN Rscript -e 'library(devtools) & install_github("NEONScience/NEON-utilities/neonUtilities", dependencies=TRUE)'
+RUN Rscript -e 'library(devtools)' \
+'install_github("NEONScience/NEON-utilities/neonUtilities", dependencies=TRUE)'
 
 # remove preexisting items in server directory
 RUN rm -rf /srv/shiny-server/* 
