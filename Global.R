@@ -1,6 +1,7 @@
 library(shiny)
 library(shinythemes)
 library(leaflet)
+library(leaflet.extras)
 library(dplyr)
 library(jsonlite)
 library(sf)
