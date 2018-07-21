@@ -53,9 +53,9 @@ function(input, output, session) {
                   popup = paste0(domain_data$DomainName),
                   color = "green"
                   ) %>%
-      # Areas for NEON flight paths (purple)
+      # Areas for NEON flight paths (red)
       addPolygons(data = flight_data$geometry,
-                  color = "purple",
+                  color = "red",
                   group = "Flightpaths",
                   popup = paste0("<strong>Site: </strong><br>",
                                  flight_data$Site,

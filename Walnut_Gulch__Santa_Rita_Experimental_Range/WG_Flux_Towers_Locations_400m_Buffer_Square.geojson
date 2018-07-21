@@ -1,9 +1,0 @@
-{
-"type": "FeatureCollection",
-"name": "WG_Flux_Towers_Locations_400m_Buffer_Square",
-"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
-"features": [
-{ "type": "Feature", "properties": { "Name": "Lucky Hills Shrubland Flux Site", "description": "Lucky Hills Shrubland Flux Site    <br>       <br>   FID   0    <br>   OID_   0    <br>   Name   Lucky Hills Shrubland Flux Site    <br>   FolderPath   WG Flux Towers.kml\/WG Flux Towers    <br>   SymbolID   0    <br>   AltMode   -1    <br>   Base   0    <br>   Snippet       <br>   PopupInfo       <br>   HasLabel   -1    <br>   LabelID   0    <br>   BUFF_DIST   400    <br>   ORIG_FID   0" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -110.0563727, 31.7404715 ], [ -110.0479307, 31.7404715 ], [ -110.0479307, 31.7476855 ], [ -110.0563727, 31.7476855 ], [ -110.0563727, 31.7404715 ] ] ] } },
-{ "type": "Feature", "properties": { "Name": "Kendall Grassland Flux Tower", "description": "Kendall Grassland Flux Tower    <br>       <br>   FID   1    <br>   OID_   0    <br>   Name   Kendall Grassland Flux Tower    <br>   FolderPath   WG Flux Towers.kml\/WG Flux Towers    <br>   SymbolID   0    <br>   AltMode   -1    <br>   Base   0    <br>   Snippet       <br>   PopupInfo       <br>   HasLabel   -1    <br>   LabelID   0    <br>   BUFF_DIST   400    <br>   ORIG_FID   1" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ -109.9462377, 31.733131 ], [ -109.9377957, 31.733131 ], [ -109.9377957, 31.740345 ], [ -109.9462377, 31.740345 ], [ -109.9462377, 31.733131 ] ] ] } }
-]
-}
