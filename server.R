@@ -12,8 +12,13 @@ function(input, output, session) {
     map <- (
     leaflet() %>%
       addProviderTiles(provider = providers$OpenStreetMap.Mapnik,
-                       options = providerTileOptions(noWrap = TRUE)
+                       group = "Basic",
+                      # options = providerTileOptions(noWrap = TRUE)
                        ) %>%
+      addProviderTiles(provider = providers$Esri.NatGeoWorldMap,
+                       group = "Nat geo") %>%
+      addProviderTiles(provider = providers$OpenTopoMap,
+                       group = "Topo") %>%
       # Add measuring tool
       addMeasure(position = "topleft",
                  primaryLengthUnit = "kilometers",
@@ -22,7 +27,8 @@ function(input, output, session) {
                  completedColor = "#7D4479"
                  ) %>%
       # Add layer control
-      addLayersControl(overlayGroups = legend$group,
+      addLayersControl(baseGroups = c("Basic", "Nat geo", "Topo"),
+                       overlayGroups = legend$group,
                        options = layersControlOptions(collapsed = FALSE)
                        ) %>%
       # Add option for fullscreen
@@ -134,7 +140,7 @@ function(input, output, session) {
 #                                     editOptions = leaflet.extras::editToolbarOptions())
   })
   
-  # NEON: Step 1- Find/Download Data
+  # NEON: Step 1- Find/Download Data: variables
   Product_ID_general <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_general)))
   Product_ID_specific <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_specific)))
   Field_Site_general <- reactive(req(
@@ -162,7 +168,7 @@ function(input, output, session) {
                  getPackage(dpID = Product_ID_specific(), site_code = Field_Site_specific(), year_month = Date_specific(), package = Package_type_specific(), savepath = Folder_path_specific()) &
                  sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
                )
-  # NEON: Step 2- Unzip/Join Downloads
+  # NEON: Step 2- Unzip/Join Downloads: variables
   NEON_folder_path <- reactive(req(readDirectoryInput(session, 'NEON_unzip_folder')))
   NEON_file_name <- reactive(req(input$NEON_unzip_file))
   NEON_file_path <- reactive(req(paste0("../", NEON_file_name())))
@@ -176,6 +182,17 @@ function(input, output, session) {
         # update the widget value
         updateDirectoryInput(session, 'NEON_unzip_folder', value = path)}
       })
+  # Functions needed to make list of files reactive
+  has.new.files <- function() {
+    unique(list.files(path = '..', pattern = ".zip"))
+  }
+  get.files <- function() {
+    list.files(path = '..', pattern = ".zip")
+  }
+  NEON_unzip_files <- reactivePoll(intervalMillis = 10, session, checkFunc = has.new.files, valueFunc = get.files)
+  observeEvent(NEON_unzip_files(), ignoreInit = TRUE, ignoreNULL = TRUE, {
+    updateSelectInput(session, inputId = 'NEON_unzip_file', choices = NEON_unzip_files())
+  })
   # Unzip data: general/specific
   observeEvent(input$unzip_NEON_folder,
                stackByTable(filepath = NEON_folder_path(), folder = TRUE) &
@@ -226,9 +243,9 @@ function(input, output, session) {
   ####FOR ME TAB####
   
   #Text for troublshooting
-  output$text_me <- renderText("Current directory: (this should be Calliope-View)")
+  output$text_me <- renderText(NEON_file_path())
   #Text for troublshooting 2
-  output$text_me_two <- renderText(getwd())
+  output$text_me_two <- renderText(NEON_file_name())
   #Table for troubleshooting
   #output$table_me <- renderTable()
 }
