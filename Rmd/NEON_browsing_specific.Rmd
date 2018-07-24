@@ -1,5 +1,0 @@
-##### Obtain a specific instance of a data product
-
-Download files for a single NEON data product, site, and year-month combination to obtain smaller and more specific NEON datasets. This functionality requires a product ID, which will need to be obtained via NEON's [search portal](http://data.neonscience.org/static/browse.html).
-
-An item will appear in a new folder of the form **NEON\_\<site\>\_\<time range\>**, located in the same directory containing **Calliope View**. The item is zipped and need to be put through step 2.
