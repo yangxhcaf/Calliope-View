@@ -12,13 +12,14 @@ function(input, output, session) {
     map <- (
     leaflet() %>%
       addProviderTiles(provider = providers$OpenStreetMap.Mapnik,
-                       group = "Basic",
-                      # options = providerTileOptions(noWrap = TRUE)
+                       group = "Basic"
                        ) %>%
       addProviderTiles(provider = providers$Esri.NatGeoWorldMap,
                        group = "Nat geo") %>%
       addProviderTiles(provider = providers$OpenTopoMap,
                        group = "Topo") %>%
+      addProviderTiles(provider = providers$Esri.WorldImagery,
+                       group = "Satellite") %>%
       # Add measuring tool
       addMeasure(position = "topleft",
                  primaryLengthUnit = "kilometers",
@@ -27,7 +28,7 @@ function(input, output, session) {
                  completedColor = "#7D4479"
                  ) %>%
       # Add layer control
-      addLayersControl(baseGroups = c("Basic", "Nat geo", "Topo"),
+      addLayersControl(baseGroups = c("Basic", "Satellite", "Nat geo", "Topo"),
                        overlayGroups = legend$group,
                        options = layersControlOptions(collapsed = FALSE)
                        ) %>%
@@ -96,13 +97,8 @@ function(input, output, session) {
       }
       map
   })
-    
-  # Allow zooming in on Santa Rita Region, currenly disabled by hashtags in Ui
-  observe({
-    proxy <- leafletProxy("map")
-    observeEvent(input$SR_center, proxy %>% setView(lng = -110.453707, lat = 31.681433, zoom = 9))
-  })
   
+  ####— DRONE ####
   # Allow user to filter drone data
   Drone_filtered_NEON_only <- reactive({
     if (input$only_neon) {
@@ -133,14 +129,89 @@ function(input, output, session) {
                                 "<br><b>NEON site (if applicable): </b>",
                                 Drone_filtered_NEON()$neonSiteCode),
                  group = "Drone",
-                 icon = drone_image_icon) #%>%
-      # Added polygon drawer, but has no functionality at the moment (took out)
-#      leaflet.extras::addDrawToolbar(targetGroup = "Drone",
-#                                     polylineOptions = FALSE, rectangleOptions = FALSE, circleOptions = FALSE, markerOptions = FALSE, circleMarkerOptions = FALSE,
-#                                     editOptions = leaflet.extras::editToolbarOptions())
+                 icon = drone_image_icon)
+  })
+  ####— NEON ####
+  
+  ####—— NEON: Step 1- Find data ####
+  ####——— 1a: By Site####
+  # Variables
+  NEONproducts_site <- reactive(nneo_site(x = input$NEONsite_site)$dataProducts)
+  NEONproducts_product <- nneo_products() # Added this variable up here because one item in finding by "site" needed it
+  # list: getting data frame of availability based on site code
+  NEONproductlist_site <- reactive(data.frame(Product_Name = NEONproducts_site()$dataProductTitle, Product_ID = NEONproducts_site()$dataProductCode))
+  # single: filtering column of products for one site through ID
+  NEONproductID_site <- reactive(req(
+    if (gsub(pattern = " ", replacement = "", x = input$NEONproductID_site) == "") {
+      "random string that will not match to anything"
+    } else {
+      gsub(pattern = " ", replacement = "", x = input$NEONproductID_site)
+    }
+  ))
+  NEONproductinfo_site <- reactive(req(filter(.data = NEONproducts_site(), dataProductCode == NEONproductID_site())))
+  # Display products: list
+  output$NEONproductoptions_site <- renderDataTable(NEONproductlist_site())
+  # Display products: single
+  output$NEONproductname_site <- renderPrint(req(NEONproductinfo_site()$dataProductTitle))
+  output$NEONproductdesc_site <- renderPrint(req(ifelse(is.null(req(NEONproductinfo_site()$dataProductTitle)),
+                                                        yes = NULL,
+                                                        no = NEONproducts_product$productDescription[NEONproducts_product$productCode %in% NEONproductID_site()]
+    )))
+  output$NEONproductdates_site <- renderPrint({
+    dates <- if (length(NEONproductinfo_site()$availableMonths) == 0) {
+      NA
+    } else {
+      NEONproductinfo_site()$availableMonths[[1]]}
+    req(dates)
+    })
+  output$NEONproductURL_site <- renderPrint({
+    urls <- if (length(NEONproductinfo_site()$availableDataUrl) == 0) {
+      NA 
+    } else {
+      NEONproductinfo_site()$availableDataUrl[[1]]}
+    req(urls)
   })
   
-  # NEON: Step 1- Find/Download Data: variables
+  ####——— 1b: By product:####
+  # Variables
+  # NEONproducts_product <- nneo_products()
+  # list: getting data table with products and IDs
+  NEONproductlist_product <- NEONproducts_product[c("productName", "productCode")]
+  names(NEONproductlist_product) <- c('Product Name', 'Product ID')
+  # single: filtering one column of parent NEON products table through ID
+  NEONproductID_product <- reactive(req(
+    ifelse(gsub(pattern = " ", replacement = "", x = input$NEONproductID_product) == "",
+      yes = "random string that will not match to anything",
+      no = gsub(pattern = " ", replacement = "", x = input$NEONproductID_product))
+    ))
+  NEONproductinfo_product <- reactive(req(filter(.data = NEONproducts_product, productCode == NEONproductID_product())))
+  # Display products: list
+  output$NEON_product_options <- renderDataTable(NEONproductlist_product)
+  # Display products: single
+  output$NEONproductname_product <- renderPrint(req(NEONproductinfo_product()$productName))
+  output$NEONproductdesc_product <- renderPrint(req(NEONproductinfo_product()$productDescription))
+  output$ui_product<- renderUI({
+    sites <- if (length(NEONproductinfo_product()$siteCodes) == 0) {
+      NA} else {
+        sort(NEONproductinfo_product()$siteCodes[[1]]$siteCode)}
+    selectInput(inputId = "NEONsite_product", label = "Available sites:", choices = req(sites))
+  })
+  output$NEONproductdates_product <- renderPrint({
+    dates <- if (length(NEONproductinfo_product()$siteCodes) == 0) {
+      NA
+    } else { 
+      NEONproductinfo_product()$siteCodes[[1]]$availableMonths[NEONproductinfo_product()$siteCodes[[1]]$siteCode %in% input$NEONsite_product][[1]]}
+    req(dates)
+  })
+  output$NEONproductURL_product <- renderPrint({
+    Urls <- if (length(NEONproductinfo_product()$siteCodes) == 0) {
+      NA
+    } else {
+      NEONproductinfo_product()$siteCodes[[1]]$availableDataUrls[NEONproductinfo_product()$siteCodes[[1]]$siteCode %in% input$NEONsite_product][[1]]}
+    req(Urls)
+  })
+  
+  ####—— NEON: Step 2- Download Data: variables ####
   Product_ID_general <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_general)))
   Product_ID_specific <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_specific)))
   Field_Site_general <- reactive(req(
@@ -168,7 +239,8 @@ function(input, output, session) {
                  getPackage(dpID = Product_ID_specific(), site_code = Field_Site_specific(), year_month = Date_specific(), package = Package_type_specific(), savepath = Folder_path_specific()) &
                  sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
                )
-  # NEON: Step 2- Unzip/Join Downloads: variables
+  
+  ####—— NEON: Step 3- Unzip/Join Downloads: variables ####
   NEON_folder_path <- reactive(req(readDirectoryInput(session, 'NEON_unzip_folder')))
   NEON_file_name <- reactive(req(input$NEON_unzip_file))
   NEON_file_path <- reactive(req(paste0("../", NEON_file_name())))
@@ -243,9 +315,9 @@ function(input, output, session) {
   ####FOR ME TAB####
   
   #Text for troublshooting
-  output$text_me <- renderText(NEON_file_path())
+  output$text_me <- renderText(NEON_product_ID_site())
   #Text for troublshooting 2
-  output$text_me_two <- renderText(NEON_file_name())
+  output$text_me_two <- renderText(length(NEONproductinfo_site()$availableDataUrl))
   #Table for troubleshooting
-  #output$table_me <- renderTable()
+  output$table_me <- renderDataTable(NEONproductinfo_product)
 }

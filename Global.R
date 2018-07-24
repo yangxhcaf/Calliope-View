@@ -8,6 +8,7 @@ library(sf)
 library(rgdal)
 library(neonUtilities)
 library(shinyWidgets)
+library(nneo)
 source('directoryWidget/directoryInput.R')
 
 ####———MAP DATA———####
@@ -21,6 +22,7 @@ source('directoryWidget/directoryInput.R')
 FieldSite_point_JSON <- fromJSON('http://data.neonscience.org/api/v0/sites') #'NEON_data/NEON_Field_Sites.json'
 # Create a data frame usaing cbind()
 FieldSite_point <- FieldSite_point_JSON$data #cbind(FieldSite_point_JSON$features$properties,FieldSite_point_JSON$features$geometry)
+FieldSite_abbs <- FieldSite_point$siteCode
 ## Retrieve polygon data for NEON Field Sites
 FieldSite_poly_JSON <- fromJSON('http://128.196.38.73:9200/neon_sites/_search?pretty')
 FieldSite_poly <- cbind(FieldSite_poly_JSON$hits$hits$`_source`$site, FieldSite_poly_JSON$hits$hits$`_source`$boundary)
