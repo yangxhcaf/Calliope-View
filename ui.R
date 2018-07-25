@@ -8,10 +8,6 @@ fluidPage(theme = shinytheme('cerulean'),
                      tabPanel("Interactive Map",
                               sidebarLayout(
                                 sidebarPanel(width = 6,
-                                             #tags$hr(),
-                                             #fileInput(inputId = "user_input_file", label = "Upload GeoJSON file: ", accept = ".json"),
-                                             #actionButton("add_user_file", label = "Add file to map"),
-                                             #tags$hr(),
                                              tags$h4("Filter Drone Data"),
                                              checkboxInput(inputId = "only_neon", label = "Only include NEON"),
                                              selectInput(inputId = "Drone_site", label = "Filter by NEON Site", choices = unique(drone_data$neonSiteCode)[!(unique(drone_data$neonSiteCode) %in% NA)], selected = unique(drone_data$neonSiteCode), multiple = TRUE),
@@ -126,13 +122,10 @@ fluidPage(theme = shinytheme('cerulean'),
                                 tabPanel("Credits",
                                          includeMarkdown('Rmd/Credits.Rmd')))
                      ),
-                     ####Tab 3: Display contents of input file####
-                     tabPanel("Input File",
-                              tableOutput("contents")),
-                     ####Tab 4: Display contents of drone data####
+                     ####Tab 3: Display contents of drone data####
                      tabPanel("Drone Data",
                               tableOutput("Drone_table")),
-                     ####Tab 5: Includes outputs to help with testing or troubleshooting####
+                     ####Tab 4: Includes outputs to help with testing or troubleshooting####
                      tabPanel("For me (troubleshooting)",
                               textOutput("text_me"),
                               textOutput("text_me_two"),

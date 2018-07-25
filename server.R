@@ -4,9 +4,9 @@ function(input, output, session) {
   ####INTERACTIVE MAP TAB####
   
   # Reactive value for layer control
-  legend <- reactiveValues(group = c("Drone", "Field Sites", "Domains", "Flightpaths"))
+  legend <- reactiveValues(group = c("Drone", "Field Sites", "Domains", "Flightpaths", "TOS"))
   
-  # Map
+  #### Map ####
   output$map <- renderLeaflet({
 
     map <- (
@@ -39,14 +39,14 @@ function(input, output, session) {
                  lng = FieldSite_point$siteLongitude,
                  lat = FieldSite_point$siteLatitude,
                  group = "Field Sites",
-                 popup = paste0("<strong>Site Name: </strong>",
+                 popup = paste0("<b>Site Name: </b>",
                                 FieldSite_point$siteDescription, " (",
                                 FieldSite_point$siteCode, ")",
-                                "<br><strong>Region: </strong>",
+                                "<br><b>Region: </b>",
                                 FieldSite_point$domainName,
-                                "<br><strong>State: </strong>",
+                                "<br><b>State: </b>",
                                 FieldSite_point$stateName,
-                                "<br><strong>Site Type: </strong>",
+                                "<br><b>Site Type: </b>",
                                 FieldSite_point$siteType),
                  clusterOptions = markerClusterOptions(),
                  label = paste0(FieldSite_point$siteDescription),
@@ -64,17 +64,38 @@ function(input, output, session) {
       addPolygons(data = flight_data$geometry,
                   color = "red",
                   group = "Flightpaths",
-                  popup = paste0("<strong>Site: </strong><br>",
+                  popup = paste0("<b>Site: </b><br>",
                                  flight_data$Site,
-                                 "<br><strong>Domain: </strong>",
+                                 "<br><b>Domain: </b>",
                                  domains[flight_data$DomainID,2],
-                                 "<br><strong>Core/Relocatable: </strong>",
+                                 "<br><b>Core/Relocatable: </b>",
                                  flight_data$'Core.or.Relocatable',
-                                 "<br><strong>Flight Priority: </strong>",
+                                 "<br><b>Flight Priority: </b>",
                                  flight_data$Priority,
-                                 "<br><strong>Version: </strong>",
+                                 "<br><b>Version: </b>",
                                  flight_info$Version)
-                  )
+                  ) %>%
+      # Markers for TOS
+      addMarkers(data = TOS_data,
+                 lng = TOS_data$longitd,
+                 lat = TOS_data$latitud,
+                 popup = paste0("<b>Site: </b>",
+                                TOS_data$siteID,
+                                "<br><b>Plot ID: </b>",
+                                TOS_data$plotID,
+                                "<br><b>Dimensions: </b>",
+                                TOS_data$plotDim,
+                                "<br><b>Plot Type: </b>",
+                                TOS_data$plotTyp, "/",
+                                TOS_data$subtype),
+                 group = "TOS",
+                 clusterOptions = markerClusterOptions()
+                 ) %>%
+      # Boundaries for TOS (gray)
+      addPolygons(data = TOS_data,
+                  popup = paste0("Area of ", TOS_data$plotID),
+                  group = "TOS",
+                  color = "gray")
     )
     # Add polygon boundaries for field sites (blue)
     for (i in 1:10) {
@@ -139,7 +160,7 @@ function(input, output, session) {
   NEONproducts_site <- reactive(nneo_site(x = input$NEONsite_site)$dataProducts)
   NEONproducts_product <- nneo_products() # Added this variable up here because one item in finding by "site" needed it
   # list: getting data frame of availability based on site code
-  NEONproductlist_site <- reactive(data.frame(Product_Name = NEONproducts_site()$dataProductTitle, Product_ID = NEONproducts_site()$dataProductCode))
+  NEONproductlist_site <- reactive(cbind("Product Name" = NEONproducts_site()$dataProductTitle, "Product ID" = NEONproducts_site()$dataProductCode))
   # single: filtering column of products for one site through ID
   NEONproductID_site <- reactive(req(
     if (gsub(pattern = " ", replacement = "", x = input$NEONproductID_site) == "") {
@@ -276,37 +297,6 @@ function(input, output, session) {
                  sendSweetAlert(session, title = "File unzipped", text = paste0("There should now be a new folder titled '", strsplit(NEON_file_name(), ".zip")[[1]][1], "' with all of the datasets."), type = "success")
                )
   
-  ####INPUT FILE TAB####
-  # Currently disabled by hashtags in Ui
-  # Get info for input files (Point GEOJSON only!!)
-  user_file_info <- reactive({
-    input$user_input_file
-  })
-  user_file_name <- reactive({
-    user_file_info()$name
-  })
-  user_file_read <- reactive({
-    readOGR(user_file_info()$datapath)
-  })
-  # Display input file in "Input File" tab
-  output$contents <- renderTable({
-    if (is.null(user_file_info())) {
-      return(NULL)
-    }
-    user_file_read()
-  })
-  # Add user file to map, create legend
-  observeEvent(input$add_user_file, legend$group <- c(legend$group, user_file_name()))
-  observeEvent(input$add_user_file,
-               if (!is.null(input$user_input_file)) {
-                 leafletProxy("map") %>% addMarkers(data = user_file_read(),
-                                                    group = as.character(user_file_name())
-                 ) %>%
-                   addLayersControl(overlayGroups = c(legend$group, as.character(user_file_name())),
-                                    options = layersControlOptions(collapsed = FALSE)) 
-               }
-               )
-  
   ####DRONE DATA TAB####
   
   # Display data via table
@@ -315,9 +305,9 @@ function(input, output, session) {
   ####FOR ME TAB####
   
   #Text for troublshooting
-  output$text_me <- renderText(NEON_product_ID_site())
+  output$text_me <- renderText(getwd())
   #Text for troublshooting 2
-  output$text_me_two <- renderText(length(NEONproductinfo_site()$availableDataUrl))
+  output$text_me_two <- renderText("")
   #Table for troubleshooting
-  output$table_me <- renderDataTable(NEONproductinfo_product)
+  #output$table_me <- renderDataTable()
 }
