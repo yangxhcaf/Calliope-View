@@ -35,23 +35,7 @@ function(input, output, session) {
       # Add option for fullscreen
       leaflet.extras::addFullscreenControl(pseudoFullscreen = TRUE) %>%
       # Markers for NEON field site locations
-      addMarkers(data = FieldSite_point,
-                 lng = FieldSite_point$siteLongitude,
-                 lat = FieldSite_point$siteLatitude,
-                 group = "Field Sites",
-                 popup = paste0("<b>Site Name: </b>",
-                                FieldSite_point$siteDescription, " (",
-                                FieldSite_point$siteCode, ")",
-                                "<br><b>Region: </b>",
-                                FieldSite_point$domainName,
-                                "<br><b>State: </b>",
-                                FieldSite_point$stateName,
-                                "<br><b>Site Type: </b>",
-                                FieldSite_point$siteType),
-                 clusterOptions = markerClusterOptions(),
-                 label = paste0(FieldSite_point$siteDescription),
-                 icon = NEON_icon
-                 ) %>%
+
       # Polygons for NEON domains (green)
       addPolygons(data = domain_data,
                   weight = 2,
@@ -98,25 +82,37 @@ function(input, output, session) {
                   color = "gray")
     )
     # Add polygon boundaries for field sites (blue)
-    for (i in 1:10) {
-      if (is.array(FieldSite_poly$coordinates[[i]])) {
-        map <- map %>%
-          addPolygons(lng = FieldSite_poly$coordinates[[i]][1,,1],
-                      lat = FieldSite_poly$coordinates[[i]][1,,2],
-                      group = "Field Sites",
-                      popup = paste0("Boundaries for ",
-                                     FieldSite_poly$siteDescription[i])
-                      )
-        } else {
-        map <- map %>%
-          addPolygons(lng = FieldSite_poly$coordinates[[i]][[1]][,1],
-                      lat = FieldSite_poly$coordinates[[i]][[1]][,2],
-                      group = "Field Sites",
-                      popup = paste0("Boundaries for ",
-                                     FieldSite_poly$siteDescription[i])
-          )}
-      }
       map
+  })
+  #### Filter Variables ####
+  # Filter fieldsites
+  Field_sites_point_type <- reactive(FieldSite_point %>% filter(siteType %in% input$fieldsite_type))
+  Field_sites_poly_type <- reactive(FieldSite_poly %>% filter(siteType %in% input$fieldsite_type))
+  observe({
+    proxy <- leafletProxy("map")
+    if (is.null(input$fieldsite_type)) {
+      proxy %>% clearGroup(group = "Field Sites")
+    } else {
+    proxy %>%
+      clearGroup(group = "Field Sites") %>%
+      addMarkers(data = Field_sites_point_type(),
+                 lng = Field_sites_point_type()$siteLongitude,
+                 lat = Field_sites_point_type()$siteLatitude,
+                 group = "Field Sites",
+                 popup = paste0("<b>Site Name: </b>",
+                                Field_sites_point_type()$siteDescription, " (",
+                                Field_sites_point_type()$siteCode, ")",
+                                "<br><b>Region: </b>",
+                                Field_sites_point_type()$domainName,
+                                "<br><b>State: </b>",
+                                Field_sites_point_type()$stateName,
+                                "<br><b>Site Type: </b>",
+                                Field_sites_point_type()$siteType),
+                 clusterOptions = markerClusterOptions(),
+                 label = paste0(Field_sites_point_type()$siteDescription),
+                 icon = NEON_icon
+                 )}
+
   })
   
   ####— DRONE ####
@@ -160,7 +156,7 @@ function(input, output, session) {
   NEONproducts_site <- reactive(nneo_site(x = input$NEONsite_site)$dataProducts)
   NEONproducts_product <- nneo_products() # Added this variable up here because one item in finding by "site" needed it
   # list: getting data frame of availability based on site code
-  NEONproductlist_site <- reactive(cbind("Product Name" = NEONproducts_site()$dataProductTitle, "Product ID" = NEONproducts_site()$dataProductCode))
+  NEONproductlist_site <- reactive(as.data.frame(cbind("Product Name" = NEONproducts_site()$dataProductTitle, "Product ID" = NEONproducts_site()$dataProductCode))[order(NEONproducts_site()$dataProductTitle),])
   # single: filtering column of products for one site through ID
   NEONproductID_site <- reactive(req(
     if (gsub(pattern = " ", replacement = "", x = input$NEONproductID_site) == "") {
@@ -173,11 +169,22 @@ function(input, output, session) {
   # Display products: list
   output$NEONproductoptions_site <- renderDataTable(NEONproductlist_site())
   # Display products: single
+  observeEvent(input$zoomtosite,
+               leafletProxy("map") %>% flyTo(lng = FieldSite_point$siteLongitude[FieldSite_point$siteCode %in% input$NEONsite_site],
+                                             lat = FieldSite_point$siteLatitude[FieldSite_point$siteCode %in% input$NEONsite_site],
+                                             zoom = 10)
+               )
   output$NEONproductname_site <- renderPrint(req(NEONproductinfo_site()$dataProductTitle))
   output$NEONproductdesc_site <- renderPrint(req(ifelse(is.null(req(NEONproductinfo_site()$dataProductTitle)),
                                                         yes = NULL,
                                                         no = NEONproducts_product$productDescription[NEONproducts_product$productCode %in% NEONproductID_site()]
-    )))
+                                                        )))
+  output$NEONproductdesign_site <- renderPrint(req(ifelse(is.null(req(NEONproductinfo_site()$dataProductTitle)),
+                                                              yes = NULL,
+                                                              no = NEONproducts_product$productDesignDescription[NEONproducts_product$productCode %in% NEONproductID_site()])))
+  output$NEONproductnotes_site <- renderPrint(req(ifelse(is.null(req(NEONproductinfo_site()$dataProductTitle)),
+                                                         yes = NULL,
+                                                         no = NEONproducts_product$productRemarks[NEONproducts_product$productCode %in% NEONproductID_site()])))
   output$NEONproductdates_site <- renderPrint({
     dates <- if (length(NEONproductinfo_site()$availableMonths) == 0) {
       NA
@@ -211,6 +218,8 @@ function(input, output, session) {
   # Display products: single
   output$NEONproductname_product <- renderPrint(req(NEONproductinfo_product()$productName))
   output$NEONproductdesc_product <- renderPrint(req(NEONproductinfo_product()$productDescription))
+  output$NEONproductdesign_product <- renderPrint(req(NEONproductinfo_product()$productDesignDescription))
+  output$NEONproductnotes_product <- renderPrint(req(NEONproductinfo_product()$productRemarks))
   output$ui_product<- renderUI({
     sites <- if (length(NEONproductinfo_product()$siteCodes) == 0) {
       NA} else {
