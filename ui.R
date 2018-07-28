@@ -9,8 +9,10 @@ fluidPage(theme = shinytheme('cerulean'),
                               sidebarLayout(
                                 sidebarPanel(width = 6,
                                              tabsetPanel(
+                                               #### — NEON ####
                                                tabPanel(tags$h5("Browse NEON Data"),
                                                  tabsetPanel(
+                                                   #### —— STEP 1- Find Data####
                                                    tabPanel("Step 1- Find Data",
                                                             radioButtons(inputId = "NEON_browsing_type", label = "Browsing method", choices = list("Start with Site" = "site", "Start with Product" = "product")),
                                                             conditionalPanel("input.NEON_browsing_type == 'site'",
@@ -77,6 +79,7 @@ fluidPage(theme = shinytheme('cerulean'),
                                                                              )
                                                             )
                                                    ),
+                                                   #### —— STEP 2- Download Data####
                                                    tabPanel("Step 2- Download Data",
                                                             radioButtons(inputId = "NEON_download_type", label = "Download method", choices = list("By Data Product— General" = "general", "By Data Product— Specific" = "specific", "By Data Product— Manual" = "manual")),
                                                             conditionalPanel("input.NEON_download_type == 'general'",
@@ -104,6 +107,7 @@ fluidPage(theme = shinytheme('cerulean'),
                                                                              includeMarkdown('Rmd/NEON_download_manual.Rmd')
                                                             )
                                                    ),
+                                                   #### —— STEP 3: Unzip/Join Downloads ####
                                                    tabPanel("Step 3- Unzip/Join Downloads",
                                                             includeMarkdown('Rmd/NEON_unzip.Rmd'),
                                                             radioButtons(inputId = "NEON_unzip_type", label = "Method of browsing (from step 1)", choices = list("By Data Product— General/Specific" = "general/specific", "By Data Product— Manual" = "manual")),
@@ -121,10 +125,12 @@ fluidPage(theme = shinytheme('cerulean'),
                                                    )
                                                  )
                                                ),
+                                               #### — DRONE ####
                                                tabPanel(tags$h5("Filter Drone Data"),
                                                  checkboxInput(inputId = "only_neon", label = "Only include NEON"),
                                                  selectInput(inputId = "Drone_site", label = "Filter by NEON Site", choices = unique(drone_data$neonSiteCode)[!(unique(drone_data$neonSiteCode) %in% NA)], selected = unique(drone_data$neonSiteCode), multiple = TRUE)
                                                ),
+                                               #### — MAP FEATURES ####
                                                tabPanel(tags$h5("Filter Map Features"),
                                                  radioButtons(inputId = "map_features", label = "Map feature:", choices = list("Field Sites"= "fieldsites", "Domains" = "domains")),
                                                  conditionalPanel("input.map_features == 'fieldsites'",
@@ -148,6 +154,9 @@ fluidPage(theme = shinytheme('cerulean'),
                                 tabPanel("Credits",
                                          includeMarkdown('Rmd/Credits.Rmd')))
                      ),
+                     #### Tab : Description of NEON ####
+                     tabPanel("About NEON",
+                              includeMarkdown('Rmd/NEON_info_about.Rmd')),
                      ####Tab 3: Display contents of drone data####
                      tabPanel("Drone Data",
                               tableOutput("Drone_table")),
