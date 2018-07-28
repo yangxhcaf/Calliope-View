@@ -33,18 +33,7 @@ function(input, output, session) {
                          options = layersControlOptions(collapsed = FALSE)
         ) %>%
         # Add option for fullscreen
-        leaflet.extras::addFullscreenControl(pseudoFullscreen = TRUE) %>%
-        # Markers for NEON field site locations
-        
-        # Polygons for NEON domains (green)
-        addPolygons(data = domain_data,
-                    weight = 2,
-                    fillOpacity = '0.05',
-                    group = "Domains",
-                    popup = paste0(domain_data$DomainName),
-                    color = "green"
-        )# %>%
-
+        leaflet.extras::addFullscreenControl(pseudoFullscreen = TRUE) 
     )
     map
   })
@@ -55,6 +44,8 @@ function(input, output, session) {
                                        filter(domainCode %in% Domain_IDs()))
   Field_sites_poly_filtered <- reactive(FieldSite_poly %>% filter(siteType %in% input$fieldsite_type) %>%
                                       filter(domainCode %in% Domain_IDs()))
+  Domain_included <- reactive(domain_data %>% filter(DomainName %in% input$fieldsite_domain))
+  Domain_unincluded <- reactive(domain_data %>% filter(!(DomainName %in% input$fieldsite_domain)))
   TOS_data_filtered <- reactive(TOS_data %>% filter(siteType %in% input$fieldsite_type) %>%
                               filter(domanID %in% Domain_IDs()))
   Flight_data_filtered <- reactive(flight_data %>% filter(SiteType %in% input$fieldsite_type) %>%
@@ -99,6 +90,7 @@ function(input, output, session) {
             addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][1,,1],
                         lat = Field_sites_poly_filtered()$coordinates[[i]][1,,2],
                         group = "Field Sites",
+                        color = "green",
                         layerId = Field_sites_poly_filtered()$siteCode[i],
                         popup = paste0("Boundaries for ",
                                        Field_sites_poly_filtered()$siteDescription[i])
@@ -108,6 +100,7 @@ function(input, output, session) {
             addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][[1]][,1],
                         lat = Field_sites_poly_filtered()$coordinates[[i]][[1]][,2],
                         group = "Field Sites",
+                        color = "green",
                         layerId = Field_sites_poly_filtered()$siteCode[i],
                         popup = paste0("Boundaries for ",
                                        Field_sites_poly_filtered()$siteDescription[i])
@@ -116,6 +109,25 @@ function(input, output, session) {
       }
     }
   })
+  #### —— Plot Domains ####
+  observe({
+    proxy <- leafletProxy("map")
+    proxy %>%
+      clearGroup(group = "Domains") %>%
+      addPolygons(data = Domain_unincluded(),
+                  weight = 2,
+                  fillOpacity = '0.3',
+                  group = "Domains",
+                  popup = paste0(Domain_unincluded()$DomainName),
+                  color = "gray") %>%
+      addPolygons(data = Domain_included(),
+                  weight = 2,
+                  fillOpacity = '0.3',
+                  group = "Domains",
+                  popup = paste0(Domain_included()$DomainName),
+                  color = "blue")
+  })
+  
   #### —— Plot Flightpaths ####
   observe({
     proxy <- leafletProxy("map")
@@ -153,7 +165,8 @@ function(input, output, session) {
                     color = "gray")
     }
   })
-  
+  # Hide TOS when launching app (TOS can make computer slow)
+  leafletProxy("map") %>% hideGroup("TOS")
   
   
   #### DRONE ####
