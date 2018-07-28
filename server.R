@@ -8,114 +8,155 @@ function(input, output, session) {
   
   #### Map ####
   output$map <- renderLeaflet({
-
+    
     map <- (
-    leaflet() %>%
-      addProviderTiles(provider = providers$OpenStreetMap.Mapnik,
-                       group = "Basic"
-                       ) %>%
-      addProviderTiles(provider = providers$Esri.NatGeoWorldMap,
-                       group = "Nat geo") %>%
-      addProviderTiles(provider = providers$OpenTopoMap,
-                       group = "Topo") %>%
-      addProviderTiles(provider = providers$Esri.WorldImagery,
-                       group = "Satellite") %>%
-      # Add measuring tool
-      addMeasure(position = "topleft",
-                 primaryLengthUnit = "kilometers",
-                 primaryAreaUnit = "sqmeters",
-                 activeColor = "#3D535D",
-                 completedColor = "#7D4479"
-                 ) %>%
-      # Add layer control
-      addLayersControl(baseGroups = c("Basic", "Satellite", "Nat geo", "Topo"),
-                       overlayGroups = legend$group,
-                       options = layersControlOptions(collapsed = FALSE)
-                       ) %>%
-      # Add option for fullscreen
-      leaflet.extras::addFullscreenControl(pseudoFullscreen = TRUE) %>%
-      # Markers for NEON field site locations
+      leaflet() %>%
+        addProviderTiles(provider = providers$OpenStreetMap.Mapnik,
+                         group = "Basic"
+        ) %>%
+        addProviderTiles(provider = providers$Esri.NatGeoWorldMap,
+                         group = "Nat geo") %>%
+        addProviderTiles(provider = providers$OpenTopoMap,
+                         group = "Topo") %>%
+        addProviderTiles(provider = providers$Esri.WorldImagery,
+                         group = "Satellite") %>%
+        # Add measuring tool
+        addMeasure(position = "topleft",
+                   primaryLengthUnit = "kilometers",
+                   primaryAreaUnit = "sqmeters",
+                   activeColor = "#3D535D",
+                   completedColor = "#7D4479"
+        ) %>%
+        # Add layer control
+        addLayersControl(baseGroups = c("Basic", "Satellite", "Nat geo", "Topo"),
+                         overlayGroups = legend$group,
+                         options = layersControlOptions(collapsed = FALSE)
+        ) %>%
+        # Add option for fullscreen
+        leaflet.extras::addFullscreenControl(pseudoFullscreen = TRUE) %>%
+        # Markers for NEON field site locations
+        
+        # Polygons for NEON domains (green)
+        addPolygons(data = domain_data,
+                    weight = 2,
+                    fillOpacity = '0.05',
+                    group = "Domains",
+                    popup = paste0(domain_data$DomainName),
+                    color = "green"
+        )# %>%
 
-      # Polygons for NEON domains (green)
-      addPolygons(data = domain_data,
-                  weight = 2,
-                  fillOpacity = '0.05',
-                  group = "Domains",
-                  popup = paste0(domain_data$DomainName),
-                  color = "green"
-                  ) %>%
-      # Areas for NEON flight paths (red)
-      addPolygons(data = flight_data$geometry,
-                  color = "red",
-                  group = "Flightpaths",
-                  popup = paste0("<b>Site: </b><br>",
-                                 flight_data$Site,
-                                 "<br><b>Domain: </b>",
-                                 domains[flight_data$DomainID,2],
-                                 "<br><b>Core/Relocatable: </b>",
-                                 flight_data$'Core.or.Relocatable',
-                                 "<br><b>Flight Priority: </b>",
-                                 flight_data$Priority,
-                                 "<br><b>Version: </b>",
-                                 flight_info$Version)
-                  ) %>%
-      # Markers for TOS
-      addMarkers(data = TOS_data,
-                 lng = TOS_data$longitd,
-                 lat = TOS_data$latitud,
-                 popup = paste0("<b>Site: </b>",
-                                TOS_data$siteID,
-                                "<br><b>Plot ID: </b>",
-                                TOS_data$plotID,
-                                "<br><b>Dimensions: </b>",
-                                TOS_data$plotDim,
-                                "<br><b>Plot Type: </b>",
-                                TOS_data$plotTyp, "/",
-                                TOS_data$subtype),
-                 group = "TOS",
-                 clusterOptions = markerClusterOptions()
-                 ) %>%
-      # Boundaries for TOS (gray)
-      addPolygons(data = TOS_data,
-                  popup = paste0("Area of ", TOS_data$plotID),
-                  group = "TOS",
-                  color = "gray")
     )
-    # Add polygon boundaries for field sites (blue)
-      map
+    map
   })
-  #### Filter Variables ####
-  # Filter fieldsites
-  Field_sites_point_type <- reactive(FieldSite_point %>% filter(siteType %in% input$fieldsite_type))
-  Field_sites_poly_type <- reactive(FieldSite_poly %>% filter(siteType %in% input$fieldsite_type))
+  #### — Filter Map Features ####
+  #### —— Filtered Features ####
+  Domain_IDs <- reactive(domains$DomainID[domains$Domain %in% input$fieldsite_domain])
+  Field_sites_point_filtered <- reactive(FieldSite_point %>% filter(siteType %in% input$fieldsite_type) %>%
+                                       filter(domainCode %in% Domain_IDs()))
+  Field_sites_poly_filtered <- reactive(FieldSite_poly %>% filter(siteType %in% input$fieldsite_type) %>%
+                                      filter(domainCode %in% Domain_IDs()))
+  TOS_data_filtered <- reactive(TOS_data %>% filter(siteType %in% input$fieldsite_type) %>%
+                              filter(domanID %in% Domain_IDs()))
+  Flight_data_filtered <- reactive(flight_data %>% filter(SiteType %in% input$fieldsite_type) %>%
+                                 filter(DomainID %in% Domain_IDs()))
+  #### —— Plot Fieldsites ####
+  # Markers
   observe({
     proxy <- leafletProxy("map")
-    if (is.null(input$fieldsite_type)) {
+    if (nrow(Field_sites_point_filtered()) == 0) {
       proxy %>% clearGroup(group = "Field Sites")
     } else {
-    proxy %>%
-      clearGroup(group = "Field Sites") %>%
-      addMarkers(data = Field_sites_point_type(),
-                 lng = Field_sites_point_type()$siteLongitude,
-                 lat = Field_sites_point_type()$siteLatitude,
-                 group = "Field Sites",
-                 popup = paste0("<b>Site Name: </b>",
-                                Field_sites_point_type()$siteDescription, " (",
-                                Field_sites_point_type()$siteCode, ")",
-                                "<br><b>Region: </b>",
-                                Field_sites_point_type()$domainName,
-                                "<br><b>State: </b>",
-                                Field_sites_point_type()$stateName,
-                                "<br><b>Site Type: </b>",
-                                Field_sites_point_type()$siteType),
-                 clusterOptions = markerClusterOptions(),
-                 label = paste0(Field_sites_point_type()$siteDescription),
-                 icon = NEON_icon
-                 )}
-
+      proxy %>% clearGroup(group = "Field Sites") %>%
+        addMarkers(data = Field_sites_point_filtered(),
+                   lng = Field_sites_point_filtered()$siteLongitude,
+                   lat = Field_sites_point_filtered()$siteLatitude,
+                   group = "Field Sites",
+                   popup = paste0("<b>Site Name: </b>",
+                                  Field_sites_point_filtered()$siteDescription, " (",
+                                  Field_sites_point_filtered()$siteCode, ")",
+                                  "<br><b>Region: </b>",
+                                  Field_sites_point_filtered()$domainName,
+                                  "<br><b>State: </b>",
+                                  Field_sites_point_filtered()$stateName,
+                                  "<br><b>Site Type: </b>",
+                                  Field_sites_point_filtered()$siteType),
+                   clusterOptions = markerClusterOptions(),
+                   label = paste0(Field_sites_point_filtered()$siteDescription),
+                   icon = NEON_icon
+        )
+    }
+  })
+  # Boundaries
+  observe({
+    proxy <- leafletProxy("map")
+    proxy %>% removeShape(layerId = unique(FieldSite_poly$siteCode))
+    if (nrow(Field_sites_poly_filtered()) == 0) {
+      proxy %>% clearGroup(group = "Field Sites")
+    } else {
+      for (i in 1:length(Field_sites_poly_filtered()$coordinates)) {
+        if (is.array(Field_sites_poly_filtered()$coordinates[[i]])) {
+          proxy %>%
+            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][1,,1],
+                        lat = Field_sites_poly_filtered()$coordinates[[i]][1,,2],
+                        group = "Field Sites",
+                        layerId = Field_sites_poly_filtered()$siteCode[i],
+                        popup = paste0("Boundaries for ",
+                                       Field_sites_poly_filtered()$siteDescription[i])
+            )
+        } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
+          proxy %>%
+            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][[1]][,1],
+                        lat = Field_sites_poly_filtered()$coordinates[[i]][[1]][,2],
+                        group = "Field Sites",
+                        layerId = Field_sites_poly_filtered()$siteCode[i],
+                        popup = paste0("Boundaries for ",
+                                       Field_sites_poly_filtered()$siteDescription[i])
+            )
+        }
+      }
+    }
+  })
+  #### —— Plot Flightpaths ####
+  observe({
+    proxy <- leafletProxy("map")
+    if (nrow(Flight_data_filtered()) == 0) {
+      proxy %>% clearGroup(group = "Flightpaths")
+    } else {
+      proxy %>% clearGroup(group = "Flightpaths") %>%
+        # Areas for NEON flight paths (red)
+        addPolygons(data = Flight_data_filtered()$geometry,
+                    color = "red",
+                    group = "Flightpaths",
+                    popup = paste0("<b>Site: </b><br>",
+                                   Flight_data_filtered()$Site,
+                                   "<br><b>Domain: </b>",
+                                   domains[Flight_data_filtered()$DomainID,2],
+                                   "<br><b>Core/Relocatable: </b>",
+                                   Flight_data_filtered()$SiteType,
+                                   "<br><b>Flight Priority: </b>",
+                                   Flight_data_filtered()$Priority,
+                                   "<br><b>Version: </b>",
+                                   Flight_data_filtered()$Version)
+        )
+    }
+  })
+  #### —— Plot TOS ####
+  observe({
+    proxy <- leafletProxy("map")
+    if (nrow(TOS_data_filtered()) == 0) {
+      proxy %>% clearGroup(group = "TOS")
+    } else {
+      proxy %>% clearGroup(group = "TOS") %>%
+        addPolygons(data = TOS_data_filtered(),
+                    popup = paste0("Area of ", TOS_data_filtered()$plotID),
+                    group = "TOS",
+                    color = "gray")
+    }
   })
   
-  ####— DRONE ####
+  
+  
+  #### DRONE ####
   # Allow user to filter drone data
   Drone_filtered_NEON_only <- reactive({
     if (input$only_neon) {
@@ -128,8 +169,8 @@ function(input, output, session) {
     if (is.na(unique(drone_data$neonSiteCode)) & length(drone_data$neonSiteCode)==1) {
       Drone_filtered_NEON_only()
     } else {
-    Drone_filtered_NEON_only() %>%
-      dplyr::filter(Drone_filtered_NEON_only()$neonSiteCode %in% c(NA, input$Drone_site))
+      Drone_filtered_NEON_only() %>%
+        dplyr::filter(Drone_filtered_NEON_only()$neonSiteCode %in% c(NA, input$Drone_site))
     }
   })
   
@@ -148,10 +189,10 @@ function(input, output, session) {
                  group = "Drone",
                  icon = drone_image_icon)
   })
-  ####— NEON ####
+  #### NEON ####
   
-  ####—— NEON: Step 1- Find data ####
-  ####——— 1a: By Site####
+  ####— NEON: Step 1- Find data ####
+  ####—— 1a: By Site####
   # Variables
   NEONproducts_site <- reactive(nneo_site(x = input$NEONsite_site)$dataProducts)
   NEONproducts_product <- nneo_products() # Added this variable up here because one item in finding by "site" needed it
@@ -173,15 +214,15 @@ function(input, output, session) {
                leafletProxy("map") %>% flyTo(lng = FieldSite_point$siteLongitude[FieldSite_point$siteCode %in% input$NEONsite_site],
                                              lat = FieldSite_point$siteLatitude[FieldSite_point$siteCode %in% input$NEONsite_site],
                                              zoom = 10)
-               )
+  )
   output$NEONproductname_site <- renderPrint(req(NEONproductinfo_site()$dataProductTitle))
   output$NEONproductdesc_site <- renderPrint(req(ifelse(is.null(req(NEONproductinfo_site()$dataProductTitle)),
                                                         yes = NULL,
                                                         no = NEONproducts_product$productDescription[NEONproducts_product$productCode %in% NEONproductID_site()]
-                                                        )))
+  )))
   output$NEONproductdesign_site <- renderPrint(req(ifelse(is.null(req(NEONproductinfo_site()$dataProductTitle)),
-                                                              yes = NULL,
-                                                              no = NEONproducts_product$productDesignDescription[NEONproducts_product$productCode %in% NEONproductID_site()])))
+                                                          yes = NULL,
+                                                          no = NEONproducts_product$productDesignDescription[NEONproducts_product$productCode %in% NEONproductID_site()])))
   output$NEONproductnotes_site <- renderPrint(req(ifelse(is.null(req(NEONproductinfo_site()$dataProductTitle)),
                                                          yes = NULL,
                                                          no = NEONproducts_product$productRemarks[NEONproducts_product$productCode %in% NEONproductID_site()])))
@@ -191,7 +232,7 @@ function(input, output, session) {
     } else {
       NEONproductinfo_site()$availableMonths[[1]]}
     req(dates)
-    })
+  })
   output$NEONproductURL_site <- renderPrint({
     urls <- if (length(NEONproductinfo_site()$availableDataUrl) == 0) {
       NA 
@@ -200,7 +241,7 @@ function(input, output, session) {
     req(urls)
   })
   
-  ####——— 1b: By product:####
+  ####—— 1b: By Product:####
   # Variables
   # NEONproducts_product <- nneo_products()
   # list: getting data table with products and IDs
@@ -209,9 +250,9 @@ function(input, output, session) {
   # single: filtering one column of parent NEON products table through ID
   NEONproductID_product <- reactive(req(
     ifelse(gsub(pattern = " ", replacement = "", x = input$NEONproductID_product) == "",
-      yes = "random string that will not match to anything",
-      no = gsub(pattern = " ", replacement = "", x = input$NEONproductID_product))
-    ))
+           yes = "random string that will not match to anything",
+           no = gsub(pattern = " ", replacement = "", x = input$NEONproductID_product))
+  ))
   NEONproductinfo_product <- reactive(req(filter(.data = NEONproducts_product, productCode == NEONproductID_product())))
   # Display products: list
   output$NEON_product_options <- renderDataTable(NEONproductlist_product)
@@ -241,7 +282,8 @@ function(input, output, session) {
     req(Urls)
   })
   
-  ####—— NEON: Step 2- Download Data: variables ####
+  ####— NEON: Step 2- Download Data####
+  # Variables
   Product_ID_general <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_general)))
   Product_ID_specific <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_specific)))
   Field_Site_general <- reactive(req(
@@ -250,7 +292,7 @@ function(input, output, session) {
     } else {
       input$location_NEON_general
     })
-    )
+  )
   Field_Site_specific <- reactive(req(input$location_NEON_specific))
   Package_type_general <- reactive(req(input$package_type_general))
   Package_type_specific <- reactive(req(input$package_type_specific))
@@ -262,28 +304,29 @@ function(input, output, session) {
   observeEvent(input$download_NEON_general,
                zipsByProduct(dpID = Product_ID_general(), site = Field_Site_general(), package = Package_type_general(), check.size = FALSE, savepath = '..') &
                  sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
-               )
+  )
   # Download NEON data: specific — creates a folder and adds files to folder
   observeEvent(input$download_NEON_specific,
                dir.create(path = Folder_path_specific()) &
                  getPackage(dpID = Product_ID_specific(), site_code = Field_Site_specific(), year_month = Date_specific(), package = Package_type_specific(), savepath = Folder_path_specific()) &
                  sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
-               )
+  )
   
-  ####—— NEON: Step 3- Unzip/Join Downloads: variables ####
+  ####— NEON: Step 3- Unzip/Join Downloads####
+  # Variables
   NEON_folder_path <- reactive(req(readDirectoryInput(session, 'NEON_unzip_folder')))
   NEON_file_name <- reactive(req(input$NEON_unzip_file))
   NEON_file_path <- reactive(req(paste0("../", NEON_file_name())))
   # Server function needed by directoryInput (https://github.com/wleepang/shiny-directory-input)
   observeEvent(ignoreNULL = TRUE,
-    eventExpr = {input$NEON_unzip_folder},
-    handlerExpr = {
-      if (input$NEON_unzip_folder > 0) {
-        # condition prevents handler execution on initial app launch, launch the directory selection dialog with initial path read from the widget
-        path = choose.dir(default = readDirectoryInput(session, 'NEON_unzip_folder'))
-        # update the widget value
-        updateDirectoryInput(session, 'NEON_unzip_folder', value = path)}
-      })
+               eventExpr = {input$NEON_unzip_folder},
+               handlerExpr = {
+                 if (input$NEON_unzip_folder > 0) {
+                   # condition prevents handler execution on initial app launch, launch the directory selection dialog with initial path read from the widget
+                   path = choose.dir(default = readDirectoryInput(session, 'NEON_unzip_folder'))
+                   # update the widget value
+                   updateDirectoryInput(session, 'NEON_unzip_folder', value = path)}
+               })
   # Functions needed to make list of files reactive
   has.new.files <- function() {
     unique(list.files(path = '..', pattern = ".zip"))
@@ -299,12 +342,12 @@ function(input, output, session) {
   observeEvent(input$unzip_NEON_folder,
                stackByTable(filepath = NEON_folder_path(), folder = TRUE) &
                  sendSweetAlert(session, title = "File unzipped", text = "The outer appearance of the folder should be the same. On the inside, there should be a new folder called 'stackedFiles' which contains the datasets.", type = "success")
-               )
+  )
   # Unzip data: manual
   observeEvent(input$unzip_NEON_file,
                stackByTable(filepath = NEON_file_path(), folder = FALSE) &
                  sendSweetAlert(session, title = "File unzipped", text = paste0("There should now be a new folder titled '", strsplit(NEON_file_name(), ".zip")[[1]][1], "' with all of the datasets."), type = "success")
-               )
+  )
   
   ####DRONE DATA TAB####
   
@@ -314,9 +357,9 @@ function(input, output, session) {
   ####FOR ME TAB####
   
   #Text for troublshooting
-  output$text_me <- renderText(getwd())
+  output$text_me <- renderText(input$fieldsite_type)
   #Text for troublshooting 2
-  output$text_me_two <- renderText("")
+  output$text_me_two <- renderText(input$fieldsite_domain)
   #Table for troubleshooting
   #output$table_me <- renderDataTable()
 }

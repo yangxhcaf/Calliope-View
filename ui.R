@@ -126,9 +126,12 @@ fluidPage(theme = shinytheme('cerulean'),
                                                  selectInput(inputId = "Drone_site", label = "Filter by NEON Site", choices = unique(drone_data$neonSiteCode)[!(unique(drone_data$neonSiteCode) %in% NA)], selected = unique(drone_data$neonSiteCode), multiple = TRUE)
                                                ),
                                                tabPanel(tags$h5("Filter Map Features"),
-                                                 radioButtons(inputId = "map_features", label = "Map feature:", choices = list("Field Sites"= "fieldsites")),
-                                                 conditionalPanel("input.map_features == 'fieldsites",
-                                                                  selectInput(inputId = "fieldsite_type", label = "Site Type:", choices = c("CORE", "RELOCATABLE"), selected = c("CORE", "RELOCATABLE"), multiple = TRUE))
+                                                 radioButtons(inputId = "map_features", label = "Map feature:", choices = list("Field Sites"= "fieldsites", "Domains" = "domains")),
+                                                 conditionalPanel("input.map_features == 'fieldsites'",
+                                                                  selectInput(inputId = "fieldsite_type", label = "Site Type:", choices = c("CORE", "RELOCATABLE"), selected = c("CORE", "RELOCATABLE"), multiple = TRUE)),
+                                                 conditionalPanel("input.map_features == 'domains'",
+                                                                  pickerInput(inputId = "fieldsite_domain", label = "Domains:", choices = domains$Domain, selected = domains$Domain, multiple = TRUE,
+                                                                              options = list(`actions-box` = TRUE, `live-search` = TRUE, title = "Select Domains to include:", `selected-text-format`= "static")))
                                                )
                                              )
                                 ),
