@@ -27,17 +27,26 @@ Then, run server.R in an R IDE (such as Rstudio). This app has to be run locally
 <img src="Img/RStudio.png" width="500"/>
 
 ### Packages
-This app requires a few packages that might need to be downloaded: <br>
+
+[Download](https://cran.r-project.org/) the latest version of R, and [RStudio](https://www.rstudio.com/) for your local or virtual machine.
+
+A few packages need to be downloaded: <br>
 * [`leaflet`](https://github.com/rstudio/leaflet) and [`leaflet.extras`](https://github.com/bhaskarvk/leaflet.extras): These are responsible for the map and its features.
 * [`devtools`](https://cran.r-project.org/web/packages/devtools/index.html): For installing packages from Github.
 * [`neonUtilities`](https://github.com/NEONScience/NEON-utilities/tree/master/neonUtilities) and [`nneo`](https://github.com/ropensci/nneo): used to pull datasets from NEON.
-  * `devtools::install_github("NEONScience/NEON-utilities/neonUtilities", dependencies=TRUE)`
-  * `install.packages("nneon")`
 * [`shinythemes`](https://github.com/rstudio/shinythemes): alter the appearance of the Shiny app. 
 * [`shinyWidgets`](https://github.com/dreamRs/shinyWidgets): provides costumized and "pimp[ed]" up widgets for shiny.
 * [`sf`](https://github.com/r-spatial/sf) and [`rgdal`](https://github.com/cran/rgdal): provide access to simple feature geometries.
 * [`jsonlite`](https://github.com/cran/jsonlite): helps deal with JSON structures.
+
+```
+install.packages(c('leaflet','leaflet.extras','devtools','nneo','shinythemes','shinyWidgets','sf','rgdal','jsonlite'))
+devtools::install_github("NEONScience/NEON-utilities/neonUtilities", dependencies=TRUE)
+```
+
+**Note: [Mac OS X](https://cran.r-project.org/bin/macosx/tools/) currently requires `gfortran` and `clang` be installed in addition to the latest version of R (v3.5.1 "Feather Spray")** 
+
 ## FEEDBACK
-This is a message from the main developer of this app, [Daniel Lee](https://github.com/Danielslee51). I am an intern`?` (my internship ended, but I'm not paid, so what am I? Exploited?) at the [CyVerse](http://www.cyverse.org/) lab at the University of Arizona. While I am doing the coding for this app, I don't personally know much about the different NEON data, sensors, and plans, and I rely on [Tyson](https://github.com/tyson-swetnam) to direct me. Due to this, when displaying NEON data I put relevant attributes to the best of my ability, but sometimes I do not know what is actually useful to a scientist. For example, on the popup for my TOS location polygons, I included the dimensions of the area, but maybe what really matters is the elevation (I have no clue). Or, when searching for NEON data products in-app, maybe people would like to see the methodology of collecting that product, which I did not include. If anyone notices anything like this on any feature, pls email me at dantheman6100@gmail.com.
+This is a message from the main developer of this app, [Daniel Lee](https://github.com/Danielslee51). I am an intern at [CyVerse](http://www.cyverse.org/). I don't personally know much about NEON data, sensors, etc. Due to this, when displaying NEON data I put relevant attributes to the best of my ability, but sometimes I do not know what is actually useful to a scientist. For example, on the popup for my TOS location polygons, I included the dimensions of the area, but maybe what really matters is the elevation (I have no clue). Or, when searching for NEON data products in-app, maybe people would like to see the methodology of collecting that product, which I did not include. If anyone notices anything like this on any feature, pls email me at dantheman6100@gmail.com.
 
 And of course, any other feedback or suggestions would be nice. I'd love to hear reactions from anyone who would potentially use the app in the future, as ultimately the app is here to help scientists who want to use it.
