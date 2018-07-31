@@ -50,6 +50,24 @@ function(input, output, session) {
                               filter(domanID %in% Domain_IDs()))
   Flight_data_filtered <- reactive(flight_data %>% filter(SiteType %in% input$fieldsite_type) %>%
                                  filter(DomainID %in% Domain_IDs()))
+  #### —— Plot Domains #### 
+  observe({
+    proxy <- leafletProxy("map")
+    proxy %>%
+      clearGroup(group = "Domains") %>%
+      addPolygons(data = Domain_unincluded(),
+                  weight = 2,
+                  fillOpacity = '0.3',
+                  group = "Domains",
+                  popup = paste0(Domain_unincluded()$DomainName),
+                  color = "gray") %>%
+      addPolygons(data = Domain_included(),
+                  weight = 2,
+                  fillOpacity = '0.3',
+                  group = "Domains",
+                  popup = paste0(Domain_included()$DomainName),
+                  color = "blue")
+  })
   #### —— Plot Fieldsites ####
   # Markers
   observe({
@@ -108,24 +126,6 @@ function(input, output, session) {
         }
       }
     }
-  })
-  #### —— Plot Domains ####
-  observe({
-    proxy <- leafletProxy("map")
-    proxy %>%
-      clearGroup(group = "Domains") %>%
-      addPolygons(data = Domain_unincluded(),
-                  weight = 2,
-                  fillOpacity = '0.3',
-                  group = "Domains",
-                  popup = paste0(Domain_unincluded()$DomainName),
-                  color = "gray") %>%
-      addPolygons(data = Domain_included(),
-                  weight = 2,
-                  fillOpacity = '0.3',
-                  group = "Domains",
-                  popup = paste0(Domain_included()$DomainName),
-                  color = "blue")
   })
   
   #### —— Plot Flightpaths ####
@@ -221,7 +221,7 @@ function(input, output, session) {
   ))
   NEONproductinfo_site <- reactive(req(filter(.data = NEONproducts_site(), dataProductCode == NEONproductID_site())))
   # Display products: list
-  output$NEONproductoptions_site <- renderDataTable(NEONproductlist_site())
+  output$NEONproductoptions_site <- renderDataTable(NEONproductlist_site(), options = list(autoWidth = TRUE))
   # Display products: single
   observeEvent(input$zoomtosite,
                leafletProxy("map") %>% flyTo(lng = FieldSite_point$siteLongitude[FieldSite_point$siteCode %in% input$NEONsite_site],
@@ -372,7 +372,7 @@ function(input, output, session) {
   #Text for troublshooting
   output$text_me <- renderText(input$fieldsite_type)
   #Text for troublshooting 2
-  output$text_me_two <- renderText(input$fieldsite_domain)
+  output$text_me_two <- renderText("")
   #Table for troubleshooting
   #output$table_me <- renderDataTable()
 }
