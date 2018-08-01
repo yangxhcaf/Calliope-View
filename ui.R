@@ -10,7 +10,7 @@ fluidPage(theme = shinytheme('cerulean'),
                                 sidebarPanel(width = 6,
                                              tabsetPanel(
                                                #### — NEON ####
-                                               tabPanel(tags$h5("Browse NEON Data"),
+                                               tabPanel(tags$h5("NEON Data"),
                                                  tabsetPanel(
                                                    #### —— STEP 1- Find Data####
                                                    tabPanel("Step 1- Find Data",
@@ -126,10 +126,19 @@ fluidPage(theme = shinytheme('cerulean'),
                                                  )
                                                ),
                                                #### — DRONE ####
-                                               tabPanel(tags$h5("Filter Drone Data"),
-                                                 checkboxInput(inputId = "only_neon", label = "Only include NEON"),
-                                                 selectInput(inputId = "Drone_site", label = "Filter by NEON Site", choices = unique(drone_data$neonSiteCode)[!(unique(drone_data$neonSiteCode) %in% NA)], selected = unique(drone_data$neonSiteCode), multiple = TRUE)
-                                               ),
+                                               tabPanel(tags$h5("Drone Data"),
+                                                        tabsetPanel(
+                                                          #### —— Access data ####
+                                                          tabPanel("Access drone data",
+                                                                   textInput(inputId = "drone_username", label = "Username", placeholder = "guest"),
+                                                                   passwordInput(inputId = "drone_password", label = "Password", placeholder = "guest"),
+                                                                   actionButton(inputId = "drone_login", label = "Pull data")),
+                                                          tabPanel("Filter data",
+                                                                   checkboxInput(inputId = "only_neon", label = "Only include NEON"),
+                                                                   selectInput(inputId = "Drone_site", label = "Filter by NEON Site", choices = unique(drone_data$neonSiteCode)[!(unique(drone_data$neonSiteCode) %in% NA)], selected = unique(drone_data$neonSiteCode), multiple = TRUE)
+                                                                   )
+                                                        )
+                                                 ),
                                                #### — MAP FEATURES ####
                                                tabPanel(tags$h5("Filter Map Features"),
                                                  radioButtons(inputId = "map_features", label = "Map feature:", choices = list("Field Sites"= "fieldsites", "Domains" = "domains")),
