@@ -1,3 +1,5 @@
+# THE NEON SECTION OF THIS APP HAS BEEN MOVED TO MAKE A [STAND-ALONE TOOL](https://github.com/Danielslee51/NEON-Shiny-Browser)
+
 # Calliope-View
 An interactive leaflet interface designed to display ecological data alongside drone imaging.
 ## Overview
