@@ -12,8 +12,7 @@ function(input, output, session) {
     map <- (
       leaflet() %>%
         addProviderTiles(provider = providers$OpenStreetMap.Mapnik,
-                         group = "Basic"
-        ) %>%
+                         group = "Basic") %>%
         addProviderTiles(provider = providers$Esri.NatGeoWorldMap,
                          group = "Nat geo") %>%
         addProviderTiles(provider = providers$OpenTopoMap,
@@ -35,7 +34,7 @@ function(input, output, session) {
         # Add option for fullscreen
         leaflet.extras::addFullscreenControl(pseudoFullscreen = TRUE) 
     )
-    map
+    map %>% setView(lng = -98.5795, lat = 39.8283, zoom = 2.5)
   })
   #### — Filter Map Features ####
   #### —— Filtered Features ####
@@ -49,7 +48,7 @@ function(input, output, session) {
   TOS_data_filtered <- reactive(TOS_data %>% filter(siteType %in% input$fieldsite_type) %>%
                               filter(domanID %in% Domain_IDs()))
   Flight_data_filtered <- reactive(flight_data %>% filter(SiteType %in% input$fieldsite_type) %>%
-                                 filter(DomainID %in% Domain_IDs()))
+                                 filter(DomainID %in% Domain_IDs()) %>% filter(Year %in% input$flightpath_year))
   #### —— Plot Domains #### 
   observe({
     proxy <- leafletProxy("map")
@@ -111,7 +110,8 @@ function(input, output, session) {
                         color = "green",
                         layerId = Field_sites_poly_filtered()$siteCode[i],
                         popup = paste0("Boundaries for ",
-                                       Field_sites_poly_filtered()$siteDescription[i])
+                                       Field_sites_poly_filtered()$siteDescription[i]),
+                        fillOpacity = 0.4
             )
         } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
           proxy %>%
@@ -121,7 +121,8 @@ function(input, output, session) {
                         color = "green",
                         layerId = Field_sites_poly_filtered()$siteCode[i],
                         popup = paste0("Boundaries for ",
-                                       Field_sites_poly_filtered()$siteDescription[i])
+                                       Field_sites_poly_filtered()$siteDescription[i]),
+                        fillOpacity = 0.4
             )
         }
       }
@@ -131,15 +132,18 @@ function(input, output, session) {
   #### —— Plot Flightpaths ####
   observe({
     proxy <- leafletProxy("map")
+   # pal <- colorFactor(palette = c("#FFFFFF", "#0000FF"), domain = Flight_data_filtered()$Year)
     if (nrow(Flight_data_filtered()) == 0) {
       proxy %>% clearGroup(group = "Flightpaths")
     } else {
       proxy %>% clearGroup(group = "Flightpaths") %>%
         # Areas for NEON flight paths (red)
         addPolygons(data = Flight_data_filtered()$geometry,
-                    color = "red",
+                    color = "Red",
                     group = "Flightpaths",
-                    popup = paste0("<b>Site: </b><br>",
+                    popup = paste0("<b>Year: </b>",
+                                   Flight_data_filtered()$Year,
+                                   "<br><b>Site: </b><br>",
                                    Flight_data_filtered()$Site,
                                    "<br><b>Domain: </b>",
                                    domains[Flight_data_filtered()$DomainID,2],
@@ -148,7 +152,9 @@ function(input, output, session) {
                                    "<br><b>Flight Priority: </b>",
                                    Flight_data_filtered()$Priority,
                                    "<br><b>Version: </b>",
-                                   Flight_data_filtered()$Version)
+                                   Flight_data_filtered()$Version),
+                    opacity = 0.3, 
+                    fillOpacity = 0.2
         )
     }
   })
@@ -159,6 +165,21 @@ function(input, output, session) {
       proxy %>% clearGroup(group = "TOS")
     } else {
       proxy %>% clearGroup(group = "TOS") %>%
+        addMarkers(data = TOS_data_filtered(),
+                   lng = TOS_data_filtered()$longitd,
+                   lat = TOS_data_filtered()$latitud,
+                   popup = paste0("<b>Site: </b>",
+                                  TOS_data_filtered()$siteID,
+                                  "<br><b>Plot ID: </b>",
+                                  TOS_data_filtered()$plotID,
+                                  "<br><b>Dimensions: </b>",
+                                  TOS_data_filtered()$plotDim,
+                                  "<br><b>Plot Type: </b>",
+                                  TOS_data_filtered()$plotTyp, "/",
+                                  TOS_data_filtered()$subtype),
+                   group = "TOS",
+                   clusterOptions = markerClusterOptions()
+        ) %>%
         addPolygons(data = TOS_data_filtered(),
                     popup = paste0("Area of ", TOS_data_filtered()$plotID),
                     group = "TOS",
@@ -170,7 +191,11 @@ function(input, output, session) {
   
   
   #### DRONE ####
-  # Allow user to filter drone data
+  
+  #### — Access drone data ####
+  drone_link <- reactive(paste0)
+  
+  #### — Filter drone data ####
   Drone_filtered_NEON_only <- reactive({
     if (input$only_neon) {
       drone_data[(!(drone_data$neonSiteCode %in% NA)),]

@@ -9,12 +9,16 @@ library(rgdal)
 library(neonUtilities)
 library(shinyWidgets)
 library(nneo)
-source('directoryWidget/directoryInput.R')
+source('Functions/directoryWidget/directoryInput.R')
+source('Functions/flight_function.R')
 
 ####———MAP DATA———####
 
+Fieldsites_JSON <- fromJSON('http://guest:guest@128.196.38.100:9200/sites/_search?size=500')
+Fieldsites <- cbind(Fieldsites_JSON$hits$hits[-5], Fieldsites_JSON$hits$hits$`_source`[-4], Fieldsites_JSON$hits$hits$`_source`$boundary)
+names(Fieldsites)[9] <- "geo_type"
 
-
+####——NEON——####
 
 ###NEON Field Sites####
 ## Retrieve point data for NEON Field Sites in JSON format
@@ -25,7 +29,7 @@ FieldSite_point <- FieldSite_point_JSON$data #cbind(FieldSite_point_JSON$feature
 FieldSite_point$domainCode <- as.numeric(gsub(pattern = "D", replacement = "", x = FieldSite_point$domainCode))
 FieldSite_abbs <- FieldSite_point$siteCode
 ## Retrieve polygon data for NEON Field Sites
-FieldSite_poly_JSON <- fromJSON('http://calliopeView:cvPass@128.196.38.73:9200/neon_sites/_search?size=500')
+FieldSite_poly_JSON <- fromJSON('http://guest:guest@128.196.38.100:9200/neon_sites/_search?size=500')
 # Unhashtag when index is down:
 #FieldSite_poly_JSON <- fromJSON('Field Sites.json')
 FieldSite_poly <- cbind(FieldSite_poly_JSON$hits$hits$`_source`$site, FieldSite_poly_JSON$hits$hits$`_source`$boundary)
@@ -45,53 +49,21 @@ domain_data <- st_read('NEON_data/NEON_Domains.json')
 ####NEON Flightpaths####
 ## Retrieve info for NEON flightpaths
 # Get human info about flightpaths
-FieldSite_table <- data.frame("Abb"=c("BART","HARV","BLAN","SCBI","SERC","DSNY","JERC","OSBS","STEI-CHEQ","STEI-TREE","UNDE","KONZ-KONA","GRSM","MLBS","ORNL","DELA","LENO","TALL","DCFS-WOOD","NOGP","CLBJ","OAES"),
-                           "Site"=c("Bartlett Experimental Forest North-South flight box", "Harvard Forest flight box","Blandy Experimental Farm flight box","Smithsonian Conservation Biology Institute flight box","Smithsonian Ecological Research Center flight box","Disney Wilderness Preserve flight box","Jones Ecological Research Center Priority 1 flight box","Ordway-Swisher Biological Station Priority 1 flight box","Chequamegon-Nicolet National Forest flight box","Steigerwaldt-Treehaven Priority 2 flight box","UNDERC flight box","Konza Prairie Biological Station and KONA agricultural site flight box","Great Smoky Mountains National Park priority 2 flight box","Mountain Lake Biological Station flight box","Oak Ridge National Laboratory flight box","Dead Lake flight box","Lenoir Landing flight box","Talladega National Forest flight box","Woodworth and Dakota Coteau Field School flight box","Northern Great Plains flight box","LBJ Grasslands flight box","Klemme Range Research Station flight box"))
-CR_table <- data.frame("Abb"=c(as.character("C"),as.character("R")),"Actual"=c(as.character("Core"),as.character("Relocatable")),
+FieldSite_table <- data.frame("Abb"=c("BART","HARV","BLAN","SCBI","SERC","DSNY","JERC","OSBS","STEI-CHEQ","STEI-TREE","UNDE","KONZ-KONA","GRSM","MLBS","ORNL","DELA","LENO","TALL","DCFS-WOOD","NOGP","CLBJ","OAES","CHEQ", "BARO"),
+                           "Site"=c("Bartlett Experimental Forest North-South flight box", "Harvard Forest flight box","Blandy Experimental Farm flight box","Smithsonian Conservation Biology Institute flight box","Smithsonian Ecological Research Center flight box","Disney Wilderness Preserve flight box","Jones Ecological Research Center Priority 1 flight box","Ordway-Swisher Biological Station Priority 1 flight box","Chequamegon-Nicolet National Forest flight box","Steigerwaldt-Treehaven Priority 2 flight box","UNDERC flight box","Konza Prairie Biological Station and KONA agricultural site flight box","Great Smoky Mountains National Park priority 2 flight box","Mountain Lake Biological Station flight box","Oak Ridge National Laboratory flight box","Dead Lake flight box","Lenoir Landing flight box","Talladega National Forest flight box","Woodworth and Dakota Coteau Field School flight box","Northern Great Plains flight box","LBJ Grasslands flight box","Klemme Range Research Station flight box",
+                                   "Chequamegon-Nicolet National Forest", "Barrow"))
+FieldSite_table <- bind_rows(FieldSite_table, as.data.frame(cbind(Abb = FieldSite_point$siteCode, Site =FieldSite_point$siteDescription)))
+FieldSite_table <- FieldSite_table[c(-29, -31, -37, -44, -45, -47, -50, -53, -60, -67, -70, -71, -74, -75, -83, -84, -92, -100),]
+CR_table <- data.frame("Abb" = c("C", "R", "A"),"Actual" = c("Core", "Relocatable", "Aquatic"),
                        stringsAsFactors = FALSE)
-# filesnames needed for loopz
-flight_filenames_all <- Sys.glob('Flightdata/Flight_boundaries_2016/D*')
-flight_filenames <- Sys.glob('Flightdata/Flight_boundaries_2016/D*.geojson')
-# loop to combine files
-flight_info <- data.frame()
-for (file in flight_filenames_all) {
-  parts <- strsplit(file, "_")
-  #EX: "Flightdata/Flight_boundaries_2016/D01_BART_R1_P1_v1.geojson"
-  name_part <- strsplit(file, "/")[[1]][3]
-  # D01_BART_R1_P1_v1.geojson
-  domain_part <- strsplit(parts[[1]][3],"D")[[1]][2]
-  # 1
-  site_part <- parts[[1]][4]
-  #BART
-  RC_part_type <- strsplit(parts[[1]][5],"")[[1]][1]
-  # R
-  RC_part_num <- strsplit(parts[[1]][5],"")[[1]][2]
-  # 1
-  priority_part <- strsplit(parts[[1]][6],"")[[1]][2]
-  # 1
-  version_part <- strsplit(parts[[1]][7],"")[[1]][2]
-  # 1
-  file_info <- cbind("Name" = name_part,
-                     "DomainID" = domain_part,
-                     "SiteAbb" = site_part,
-                     "Site" = as.character(FieldSite_table$Site[FieldSite_table$Abb %in% site_part]),
-                     "SiteType" = toupper(CR_table[grep(RC_part_type,CR_table$Abb),2]),
-                     "SiteType_number" = RC_part_num,
-                     "Priority" = priority_part,
-                     "Version" = version_part)
-  flight_info <- rbind(flight_info, file_info)
-}
-flight_info$DomainID <- as.numeric(as.character(flight_info$DomainID))
-# Get geometries for flightpaths
-flight_geo <- st_read(flight_filenames[1])
-flight_geo <- flight_geo[names(flight_geo) %in% "geometry"]
-for (file in flight_filenames[-1]) {
-  file_geo <- st_read(file)
-  file_geo <- file_geo[names(file_geo) %in% "geometry"]
-  flight_geo <- rbind(flight_geo,file_geo)
-}
-# Final data table
-flight_data <- data.frame(flight_info, flight_geo)
+# filesnames needed for loops
+flight_filenames_all_2016 <- Sys.glob('Flightdata/Flight_boundaries_2016/D*')
+flight_filenames_2016 <- Sys.glob('Flightdata/Flight_boundaries_2016/D*.geojson')
+flight_data(flightlist_info = flight_filenames_all_2016, flightlist_geo = flight_filenames_2016, year = "2016", name = "flight_data_2016")
+flight_filenames_all_2017 <- Sys.glob('Flightdata/Flight_boundaries_2017/D*')
+flight_filenames_2017 <- Sys.glob('Flightdata/Flight_boundaries_2017/D*.geojson')
+flight_data(flightlist_info = flight_filenames_all_2017, flightlist_geo = flight_filenames_2017, year = "2017", name = "flight_data_2017")
+flight_data <- rbind(flight_data_2016, flight_data_2017)
 
 ### TOS ####
 # Point markers
@@ -102,9 +74,9 @@ for (i in 1:length(TOS_data$siteID)) {
 TOS_data$domanID <- as.numeric(gsub(pattern = "D", replacement = "", x = TOS_data$domanID))
 
 #### DRONE ####
-drone_json <- fromJSON('http://calliopeView:cvPass@128.196.38.73:9200/metadata/_search?size=75')
+#drone_json <- fromJSON('http://guest:guest@128.196.38.100:9200/metadata/_search?size=75')
 # Unhashtag when index is down:
-# drone_json <- fromJSON('Drone Images.json')
+drone_json <- fromJSON('Drone Images.json')
 drone_data <- cbind(drone_json$hits$hits[names(drone_json$hits$hits)!="_source"],
                     drone_json$hits$hits$`_source`[names(drone_json$hits$hits$`_source`)!="imageMetadata"],
                     drone_json$hits$hits$`_source`$imageMetadata[!(names(drone_json$hits$hits$`_source`$imageMetadata) %in% c("speed", "rotation"))],
