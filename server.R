@@ -53,13 +53,13 @@ function(input, output, session) {
       clearGroup(group = "Domains") %>%
       addPolygons(data = Domain_unincluded(),
                   weight = 2,
-                  fillOpacity = '0.18',
+                  fillOpacity = '0.3',
                   group = "Domains",
                   popup = paste0(Domain_unincluded()$DomainName),
                   color = "gray") %>%
       addPolygons(data = Domain_included(),
                   weight = 2,
-                  fillOpacity = '0.18',
+                  fillOpacity = '0.3',
                   group = "Domains",
                   popup = paste0(Domain_included()$DomainName),
                   color = "blue")
@@ -90,7 +90,7 @@ function(input, output, session) {
                                    "<br><b>Version: </b>",
                                    Flight_data_filtered()$Version),
                     opacity = 0.3, 
-                    fillOpacity = 0.06
+                    fillOpacity = 0.2
         )
     }
   })
@@ -161,29 +161,25 @@ function(input, output, session) {
       for (i in 1:length(Field_sites_poly_filtered()$coordinates)) {
         if (is.array(Field_sites_poly_filtered()$coordinates[[i]])) {
           proxy %>%
-            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][1,,1],
-                        lat = Field_sites_poly_filtered()$coordinates[[i]][1,,2],
-                        group = "Field Sites",
-                        color = "#49E2BD",
-                        layerId = Field_sites_poly_filtered()$code[i],
-                        popup = paste0("Boundaries for ",
-                                       Field_sites_poly_filtered()$name[i]),
-                        opacity = 1,
-                        fillOpacity = 0,
-                        highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7, bringToFront = TRUE)
+            addPolylines(lng = Field_sites_poly_filtered()$coordinates[[i]][1,,1],
+                         lat = Field_sites_poly_filtered()$coordinates[[i]][1,,2],
+                         group = "Field Sites",
+                         color = "#49E2BD",
+                         layerId = Field_sites_poly_filtered()$code[i],
+                         popup = paste0("Boundaries for ",
+                                        Field_sites_poly_filtered()$name[i]),
+                         fillOpacity = 1
             )
         } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
           proxy %>%
-            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][[1]][,1],
-                        lat = Field_sites_poly_filtered()$coordinates[[i]][[1]][,2],
-                        group = "Field Sites",
-                        color = "#49E2BD",
-                        layerId = Field_sites_poly_filtered()$code[i],
-                        popup = paste0("Boundaries for ",
-                                       Field_sites_poly_filtered()$name[i]),
-                        opacity = 1,
-                        fillOpacity = 0,
-                        highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7, bringToFront = TRUE)
+            addPolylines(lng = Field_sites_poly_filtered()$coordinates[[i]][[1]][,1],
+                         lat = Field_sites_poly_filtered()$coordinates[[i]][[1]][,2],
+                         group = "Field Sites",
+                         color = "#49E2BD",
+                         layerId = Field_sites_poly_filtered()$code[i],
+                         popup = paste0("Boundaries for ",
+                                        Field_sites_poly_filtered()$name[i]),
+                         highlightOptions = highlightOptions(stroke = )
             )
         }
       }
@@ -247,9 +243,9 @@ function(input, output, session) {
   ))
   NEONproductinfo_site <- reactive(req(filter(.data = NEONproducts_site(), dataProductCode == NEONproductID_site())))
   # Display products: list
-  output$NEONproductoptions_site <- renderDataTable(NEONproductlist_site(), options = list(autoWidth = TRUE))
+  output$NEONproductoptions_site <- renderDataTable(NEONproductlist_site(), options = list(lengthMenu = c(10,25),
+                                                                                           pageLength = 10))
   # Display products: single
-  output$NEONproductsite_site <- renderPrint(req(input$NEONsite_site))
   observeEvent(input$zoomtosite,
                leafletProxy("map") %>% flyTo(lng = FieldSite_point$siteLongitude[FieldSite_point$siteCode %in% input$NEONsite_site],
                                              lat = FieldSite_point$siteLatitude[FieldSite_point$siteCode %in% input$NEONsite_site],
@@ -283,10 +279,20 @@ function(input, output, session) {
   
   ####—— 1b: By Product:####
   # Variables
-  # NEONproducts_product <- nneo_products()
   # list: getting data table with products and IDs
-  NEONproductlist_product <- NEONproducts_product[c("productName", "productCode")]
-  names(NEONproductlist_product) <- c('Product Name', 'Product ID')
+  # Filter by keywords
+  keywords <- NULL
+  for (i in 1:180) {
+    keywords <- c(keywords, NEONproducts_product$keywords[[i]])
+  }
+  keywords <- unique(keywords)
+  keywords <- sort(keywords)
+  output$ui_selectkeywords_product <- renderUI(selectInput(inputId = "NEONproductkeywords_product", label = "Keywords", choices = keywords, multiple = TRUE))
+  NEONproducts_product_keyword <- NEONproducts_product[c("productName", "productCode", "keywords")]
+  names(NEONproducts_product_keyword) <- c('Product Name', 'Product ID', 'keywords')
+  NEONproducts_product_keyword <- NEONproducts_product_keyword[order(NEONproducts_product_keyword$`Product Name`),]
+  keyword_filters <- reactive(filter_keyword(column = NEONproducts_product_keyword$keywords, keywords = input$NEONproductkeywords_product))
+  NEONproductlist_product <- reactive(NEONproducts_product_keyword[keyword_filters(),])
   # single: filtering one column of parent NEON products table through ID
   NEONproductID_product <- reactive(req(
     ifelse(gsub(pattern = " ", replacement = "", x = input$NEONproductID_product) == "",
@@ -295,13 +301,14 @@ function(input, output, session) {
   ))
   NEONproductinfo_product <- reactive(req(filter(.data = NEONproducts_product, productCode == NEONproductID_product())))
   # Display products: list
-  output$NEON_product_options <- renderDataTable(NEONproductlist_product)
+  output$NEON_product_options <- renderDataTable(NEONproductlist_product()[1:2], options = list(lengthMenu = c(10,25),
+                                                                                                pageLength = 10))
   # Display products: single
   output$NEONproductname_product <- renderPrint(req(NEONproductinfo_product()$productName))
   output$NEONproductdesc_product <- renderPrint(req(NEONproductinfo_product()$productDescription))
   output$NEONproductdesign_product <- renderPrint(req(NEONproductinfo_product()$productDesignDescription))
   output$NEONproductnotes_product <- renderPrint(req(NEONproductinfo_product()$productRemarks))
-  output$ui_product<- renderUI({
+  output$ui_selectsite<- renderUI({
     sites <- if (length(NEONproductinfo_product()$siteCodes) == 0) {
       NA} else {
         sort(NEONproductinfo_product()$siteCodes[[1]]$siteCode)}
