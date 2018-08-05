@@ -6,13 +6,17 @@ fluidPage(theme = shinytheme('cerulean'),
           navbarPage(tags$b("Calliope-View"),
                      ####Tab 1: Includes the map, and key with features like filtering data####
                      tabPanel("Interactive Map",
+                              dropdown(right = FALSE, status = "primary", size = "sm",
+                                       selectInput(inputId = "NEONsite", label = "Zoom to a site:", choices = FieldSite_abbs),
+                                       shiny::actionButton(inputId = "zoomtosite", label = "See site")
+                              ),
                               sidebarLayout(
                                 sidebarPanel(width = 6,
                                              tabsetPanel(
                                                #### — NEON ####
                                                tabPanel(tags$h5("NEON Data"),
                                                  tabsetPanel(
-                                                   #### —— STEP 1- Find Data####
+                                                   #### —— STEP 1: Find Data####
                                                    tabPanel("Step 1- Find Data",
                                                             radioButtons(inputId = "NEON_browsing_type", label = "Browsing method", choices = list("Start with Site" = "site", "Start with Product" = "product")),
                                                             conditionalPanel("input.NEON_browsing_type == 'site'",
@@ -20,14 +24,11 @@ fluidPage(theme = shinytheme('cerulean'),
                                                                              radioButtons(inputId = "NEONbrowsingstep_site", label = "Steps:", choices = list("Find Product" = "list", "Get Availability" = "single"), inline = TRUE),
                                                                              conditionalPanel("input.NEONbrowsingstep_site == 'list'",
                                                                                               selectInput(inputId = "NEONsite_site", label = "Select site:", choices = FieldSite_abbs),
-                                                                                              actionButton(inputId = "zoomtosite", label = "See site"),
-                                                                                              tags$br(),
-                                                                                              tags$b("Data Products Available:"),
-                                                                                              tags$br(),
-                                                                                              tags$br(),
                                                                                               dataTableOutput(outputId = "NEONproductoptions_site")
                                                                              ),
                                                                              conditionalPanel("input.NEONbrowsingstep_site == 'single'",
+                                                                                              tags$b("Site:"),
+                                                                                              verbatimTextOutput(outputId = "NEONproductsite_site", placeholder = TRUE),
                                                                                               textInput(inputId = "NEONproductID_site", label = "Product ID"),
                                                                                               tags$b("Name:"),
                                                                                               verbatimTextOutput(outputId = "NEONproductname_site", placeholder = TRUE),
@@ -79,7 +80,7 @@ fluidPage(theme = shinytheme('cerulean'),
                                                                              )
                                                             )
                                                    ),
-                                                   #### —— STEP 2- Download Data####
+                                                   #### —— STEP 2: Download Data####
                                                    tabPanel("Step 2- Download Data",
                                                             radioButtons(inputId = "NEON_download_type", label = "Download method", choices = list("By Data Product— General" = "general", "By Data Product— Specific" = "specific", "By Data Product— Manual" = "manual")),
                                                             conditionalPanel("input.NEON_download_type == 'general'",

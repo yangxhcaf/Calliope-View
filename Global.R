@@ -18,33 +18,42 @@ Fieldsites_JSON <- fromJSON('http://guest:guest@128.196.38.100:9200/sites/_searc
 Fieldsites <- cbind(Fieldsites_JSON$hits$hits[-5], Fieldsites_JSON$hits$hits$`_source`[-4], Fieldsites_JSON$hits$hits$`_source`$boundary)
 names(Fieldsites)[9] <- "geo_type"
 
+
+
 ####——NEON——####
 
 ###NEON Field Sites####
 ## Retrieve point data for NEON Field Sites in JSON format
 
-FieldSite_point_JSON <- fromJSON('http://data.neonscience.org/api/v0/sites') #'NEON_data/NEON_Field_Sites.json'
+FieldSite_point_JSON <- fromJSON('http://data.neonscience.org/api/v0/sites')
 # Create a data frame using cbind()
 FieldSite_point <- FieldSite_point_JSON$data #cbind(FieldSite_point_JSON$features$properties,FieldSite_point_JSON$features$geometry)
 FieldSite_point$domainCode <- as.numeric(gsub(pattern = "D", replacement = "", x = FieldSite_point$domainCode))
 FieldSite_abbs <- FieldSite_point$siteCode
 ## Retrieve polygon data for NEON Field Sites
-FieldSite_poly_JSON <- fromJSON('http://guest:guest@128.196.38.100:9200/neon_sites/_search?size=500')
-# Unhashtag when index is down:
-#FieldSite_poly_JSON <- fromJSON('Field Sites.json')
-FieldSite_poly <- cbind(FieldSite_poly_JSON$hits$hits$`_source`$site, FieldSite_poly_JSON$hits$hits$`_source`$boundary)
-FieldSite_poly$domainCode <- as.numeric(gsub(pattern = "D", replacement = "", x = FieldSite_poly$domainCode))
+Fieldsites_NEON <- Fieldsites %>% filter(type %in% "NEON")
+for (i in 1:nrow(Fieldsites_NEON)) {
+  Fieldsites_NEON$code[i] <- strsplit(Fieldsites_NEON$code[i], "-")[[1]][2]
+  Fieldsites_NEON$siteType[i] <- strsplit(Fieldsites_NEON$name[i], ", ")[[1]][2]
+  Fieldsites_NEON$name[i] <- strsplit(Fieldsites_NEON$name[i], ", ")[[1]][1]
+  Fieldsites_NEON$domainName[i] <- strsplit(Fieldsites_NEON$details[[i]][1], ":")[[1]][2]
+  Fieldsites_NEON$domainCode[i] <- strsplit(Fieldsites_NEON$details[[i]][2], ":")[[1]][2]
+  Fieldsites_NEON$domainCode[i] <- strsplit(Fieldsites_NEON$domainCode[i], "D")[[1]][2]  
+  Fieldsites_NEON$stateCode[i] <- strsplit(Fieldsites_NEON$details[[i]][5], ":")[[1]][2]
+  Fieldsites_NEON$stateName[i] <- strsplit(Fieldsites_NEON$details[[i]][6], ":")[[1]][2]
+}
+Fieldsites_NEON$domainCode <- as.numeric(Fieldsites_NEON$domainCode)
 
 ####NEON Domains####
 ## Retrive data from NEON Domains in JSON format
-domains <- fromJSON('NEON_data/NEON_Domains.json')
+domains <- fromJSON('NEON-data/NEON_Domains.json')
 # Retrieve just the DomainID and Domain Name
 domains <- cbind("DomainID" = domains$features$properties$DomainID,"Domain"=domains$features$properties$DomainName)
 # Remove Duplicates, make data frame
 domains <- as.data.frame(unique(domains))
 domains$Domain <- as.character(domains$Domain)
 # Retrieve geometry data using st_read()
-domain_data <- st_read('NEON_data/NEON_Domains.json')
+domain_data <- st_read('NEON-data/NEON_Domains.json')
 
 ####NEON Flightpaths####
 ## Retrieve info for NEON flightpaths
@@ -57,11 +66,11 @@ FieldSite_table <- FieldSite_table[c(-29, -31, -37, -44, -45, -47, -50, -53, -60
 CR_table <- data.frame("Abb" = c("C", "R", "A"),"Actual" = c("Core", "Relocatable", "Aquatic"),
                        stringsAsFactors = FALSE)
 # filesnames needed for loops
-flight_filenames_all_2016 <- Sys.glob('Flightdata/Flight_boundaries_2016/D*')
-flight_filenames_2016 <- Sys.glob('Flightdata/Flight_boundaries_2016/D*.geojson')
+flight_filenames_all_2016 <- Sys.glob('NEON-data/Flightdata/Flight_boundaries_2016/D*')
+flight_filenames_2016 <- Sys.glob('NEON-data/Flightdata/Flight_boundaries_2016/D*.geojson')
 flight_data(flightlist_info = flight_filenames_all_2016, flightlist_geo = flight_filenames_2016, year = "2016", name = "flight_data_2016")
-flight_filenames_all_2017 <- Sys.glob('Flightdata/Flight_boundaries_2017/D*')
-flight_filenames_2017 <- Sys.glob('Flightdata/Flight_boundaries_2017/D*.geojson')
+flight_filenames_all_2017 <- Sys.glob('NEON-data/Flightdata/Flight_boundaries_2017/D*')
+flight_filenames_2017 <- Sys.glob('NEON-data/Flightdata/Flight_boundaries_2017/D*.geojson')
 flight_data(flightlist_info = flight_filenames_all_2017, flightlist_geo = flight_filenames_2017, year = "2017", name = "flight_data_2017")
 flight_data <- rbind(flight_data_2016, flight_data_2017)
 
@@ -110,4 +119,3 @@ NEON_icon <- makeIcon(iconUrl = "Img/NEON.png",
 drone_image_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/map-pin.png",
                              iconAnchorX = 24, iconAnchorY = 48,
                              popupAnchorX = -1, popupAnchorY = -48)
-           

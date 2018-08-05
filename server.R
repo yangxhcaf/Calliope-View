@@ -40,15 +40,12 @@ function(input, output, session) {
   #### —— Filtered Features ####
   Domain_IDs <- reactive(domains$DomainID[domains$Domain %in% input$fieldsite_domain])
   Field_sites_point_filtered <- reactive(FieldSite_point %>% filter(siteType %in% input$fieldsite_type) %>%
-                                       filter(domainCode %in% Domain_IDs()))
-  Field_sites_poly_filtered <- reactive(FieldSite_poly %>% filter(siteType %in% input$fieldsite_type) %>%
-                                      filter(domainCode %in% Domain_IDs()))
+                                           filter(domainCode %in% Domain_IDs()))
+  Field_sites_poly_filtered <- reactive(Fieldsites_NEON %>% filter(code %in% Field_sites_point_filtered()$siteCode))
   Domain_included <- reactive(domain_data %>% filter(DomainName %in% input$fieldsite_domain))
   Domain_unincluded <- reactive(domain_data %>% filter(!(DomainName %in% input$fieldsite_domain)))
-  TOS_data_filtered <- reactive(TOS_data %>% filter(siteType %in% input$fieldsite_type) %>%
-                              filter(domanID %in% Domain_IDs()))
-  Flight_data_filtered <- reactive(flight_data %>% filter(SiteType %in% input$fieldsite_type) %>%
-                                 filter(DomainID %in% Domain_IDs()) %>% filter(Year %in% input$flightpath_year))
+  TOS_data_filtered <- reactive(TOS_data %>% filter(siteID %in% Field_sites_point_filtered()$siteCode))
+  Flight_data_filtered <- reactive(flight_data %>% filter(SiteAbb %in% Field_sites_point_filtered()$siteCode) %>% filter(Year %in% input$flightpath_year))
   #### —— Plot Domains #### 
   observe({
     proxy <- leafletProxy("map")
@@ -56,77 +53,16 @@ function(input, output, session) {
       clearGroup(group = "Domains") %>%
       addPolygons(data = Domain_unincluded(),
                   weight = 2,
-                  fillOpacity = '0.3',
+                  fillOpacity = '0.18',
                   group = "Domains",
                   popup = paste0(Domain_unincluded()$DomainName),
                   color = "gray") %>%
       addPolygons(data = Domain_included(),
                   weight = 2,
-                  fillOpacity = '0.3',
+                  fillOpacity = '0.18',
                   group = "Domains",
                   popup = paste0(Domain_included()$DomainName),
                   color = "blue")
-  })
-  #### —— Plot Fieldsites ####
-  # Markers
-  observe({
-    proxy <- leafletProxy("map")
-    if (nrow(Field_sites_point_filtered()) == 0) {
-      proxy %>% clearGroup(group = "Field Sites")
-    } else {
-      proxy %>% clearGroup(group = "Field Sites") %>%
-        addMarkers(data = Field_sites_point_filtered(),
-                   lng = Field_sites_point_filtered()$siteLongitude,
-                   lat = Field_sites_point_filtered()$siteLatitude,
-                   group = "Field Sites",
-                   popup = paste0("<b>Site Name: </b>",
-                                  Field_sites_point_filtered()$siteDescription, " (",
-                                  Field_sites_point_filtered()$siteCode, ")",
-                                  "<br><b>Region: </b>",
-                                  Field_sites_point_filtered()$domainName,
-                                  "<br><b>State: </b>",
-                                  Field_sites_point_filtered()$stateName,
-                                  "<br><b>Site Type: </b>",
-                                  Field_sites_point_filtered()$siteType),
-                   clusterOptions = markerClusterOptions(),
-                   label = paste0(Field_sites_point_filtered()$siteDescription),
-                   icon = NEON_icon
-        )
-    }
-  })
-  # Boundaries
-  observe({
-    proxy <- leafletProxy("map")
-    proxy %>% removeShape(layerId = unique(FieldSite_poly$siteCode))
-    if (nrow(Field_sites_poly_filtered()) == 0) {
-      proxy %>% clearGroup(group = "Field Sites")
-    } else {
-      for (i in 1:length(Field_sites_poly_filtered()$coordinates)) {
-        if (is.array(Field_sites_poly_filtered()$coordinates[[i]])) {
-          proxy %>%
-            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][1,,1],
-                        lat = Field_sites_poly_filtered()$coordinates[[i]][1,,2],
-                        group = "Field Sites",
-                        color = "green",
-                        layerId = Field_sites_poly_filtered()$siteCode[i],
-                        popup = paste0("Boundaries for ",
-                                       Field_sites_poly_filtered()$siteDescription[i]),
-                        fillOpacity = 0.4
-            )
-        } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
-          proxy %>%
-            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][[1]][,1],
-                        lat = Field_sites_poly_filtered()$coordinates[[i]][[1]][,2],
-                        group = "Field Sites",
-                        color = "green",
-                        layerId = Field_sites_poly_filtered()$siteCode[i],
-                        popup = paste0("Boundaries for ",
-                                       Field_sites_poly_filtered()$siteDescription[i]),
-                        fillOpacity = 0.4
-            )
-        }
-      }
-    }
   })
   
   #### —— Plot Flightpaths ####
@@ -154,7 +90,7 @@ function(input, output, session) {
                                    "<br><b>Version: </b>",
                                    Flight_data_filtered()$Version),
                     opacity = 0.3, 
-                    fillOpacity = 0.2
+                    fillOpacity = 0.06
         )
     }
   })
@@ -188,6 +124,71 @@ function(input, output, session) {
   })
   # Hide TOS when launching app (TOS can make computer slow)
   leafletProxy("map") %>% hideGroup("TOS")
+  #### —— Plot Fieldsites ####
+  # Markers
+  observe({
+    proxy <- leafletProxy("map")
+    if (nrow(Field_sites_point_filtered()) == 0) {
+      proxy %>% clearGroup(group = "Field Sites")
+    } else {
+      proxy %>% clearGroup(group = "Field Sites") %>%
+        addMarkers(data = Field_sites_point_filtered(),
+                   lng = Field_sites_point_filtered()$siteLongitude,
+                   lat = Field_sites_point_filtered()$siteLatitude,
+                   group = "Field Sites",
+                   popup = paste0("<b>Site Name: </b>",
+                                  Field_sites_point_filtered()$siteDescription, " (",
+                                  Field_sites_point_filtered()$siteCode, ")",
+                                  "<br><b>Region: </b>",
+                                  Field_sites_point_filtered()$domainName,
+                                  "<br><b>State: </b>",
+                                  Field_sites_point_filtered()$stateName,
+                                  "<br><b>Site Type: </b>",
+                                  Field_sites_point_filtered()$siteType),
+                   clusterOptions = markerClusterOptions(),
+                   label = paste0(Field_sites_point_filtered()$siteDescription),
+                   icon = NEON_icon
+        )
+    }
+  })
+  # Boundaries
+  observe({
+    proxy <- leafletProxy("map")
+    proxy %>% removeShape(layerId = unique(Fieldsites_NEON$code))
+    if (nrow(Field_sites_poly_filtered()) == 0) {
+      proxy %>% clearGroup(group = "Field Sites")
+    } else {
+      for (i in 1:length(Field_sites_poly_filtered()$coordinates)) {
+        if (is.array(Field_sites_poly_filtered()$coordinates[[i]])) {
+          proxy %>%
+            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][1,,1],
+                        lat = Field_sites_poly_filtered()$coordinates[[i]][1,,2],
+                        group = "Field Sites",
+                        color = "#49E2BD",
+                        layerId = Field_sites_poly_filtered()$code[i],
+                        popup = paste0("Boundaries for ",
+                                       Field_sites_poly_filtered()$name[i]),
+                        opacity = 1,
+                        fillOpacity = 0,
+                        highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7, bringToFront = TRUE)
+            )
+        } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
+          proxy %>%
+            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][[1]][,1],
+                        lat = Field_sites_poly_filtered()$coordinates[[i]][[1]][,2],
+                        group = "Field Sites",
+                        color = "#49E2BD",
+                        layerId = Field_sites_poly_filtered()$code[i],
+                        popup = paste0("Boundaries for ",
+                                       Field_sites_poly_filtered()$name[i]),
+                        opacity = 1,
+                        fillOpacity = 0,
+                        highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7, bringToFront = TRUE)
+            )
+        }
+      }
+    }
+  })
   
   
   #### DRONE ####
@@ -248,6 +249,7 @@ function(input, output, session) {
   # Display products: list
   output$NEONproductoptions_site <- renderDataTable(NEONproductlist_site(), options = list(autoWidth = TRUE))
   # Display products: single
+  output$NEONproductsite_site <- renderPrint(req(input$NEONsite_site))
   observeEvent(input$zoomtosite,
                leafletProxy("map") %>% flyTo(lng = FieldSite_point$siteLongitude[FieldSite_point$siteCode %in% input$NEONsite_site],
                                              lat = FieldSite_point$siteLatitude[FieldSite_point$siteCode %in% input$NEONsite_site],

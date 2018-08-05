@@ -4,7 +4,7 @@ flight_data <- function(flightlist_info, flightlist_geo, year, name) {
   for (file in flightlist_info) {
     parts <- strsplit(file, "_")
     #EX: "Flightdata/Flight_boundaries_2016/D01_BART_R1_P1_v1.geojson"
-    name_part <- strsplit(file, "/")[[1]][3]
+    name_part <- strsplit(file, "/")[[1]][4]
     # D01_BART_R1_P1_v1.geojson
     domain_part <- strsplit(parts[[1]][3],"D")[[1]][2]
     # 1
