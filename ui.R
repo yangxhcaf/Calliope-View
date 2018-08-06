@@ -6,12 +6,12 @@ fluidPage(theme = shinytheme('cerulean'),
           navbarPage(tags$b("Calliope-View"),
                      ####Tab 1: Includes the map, and key with features like filtering data####
                      tabPanel("Interactive Map",
+                              dropdown(right = TRUE, status = "primary", size = "xs",
+                                       selectInput(inputId = "NEONsite_zoom", label = "Zoom to a site:", choices = FieldSite_abbs),
+                                       shiny::actionButton(inputId = "zoomtosite", label = "See site")
+                              ),
                               sidebarLayout(
                                 sidebarPanel(width = 6,
-                                             dropdown(right = FALSE, status = "primary", size = "sm",
-                                                      selectInput(inputId = "NEONsite", label = "Zoom to a site:", choices = FieldSite_abbs),
-                                                      shiny::actionButton(inputId = "zoomtosite", label = "See site")
-                                             ),
                                              tabsetPanel(
                                                #### — NEON ####
                                                tabPanel(tags$h5("NEON Data"),
@@ -24,6 +24,7 @@ fluidPage(theme = shinytheme('cerulean'),
                                                                              radioButtons(inputId = "NEONbrowsingstep_site", label = NULL, choices = list("Find Product" = "list", "Get Availability" = "single"), inline = TRUE),
                                                                              conditionalPanel("input.NEONbrowsingstep_site == 'list'",
                                                                                               selectInput(inputId = "NEONsite_site", label = "Select site:", choices = FieldSite_abbs),
+                                                                                              uiOutput(outputId = "ui_selectkeywords_site"),
                                                                                               dataTableOutput(outputId = "NEONproductoptions_site")
                                                                              ),
                                                                              conditionalPanel("input.NEONbrowsingstep_site == 'single'",
@@ -167,13 +168,13 @@ fluidPage(theme = shinytheme('cerulean'),
                                 tabPanel("Credits",
                                          includeMarkdown('Rmd/Credits.Rmd')))
                      ),
-                     #### Tab : Description of NEON ####
+                     #### Tab 3: Description of NEON ####
                      tabPanel("About NEON",
                               includeMarkdown('Rmd/NEON_info_about.Rmd')),
-                     ####Tab 3: Display contents of drone data####
+                     ####Tab 4: Display contents of drone data####
                      tabPanel("Drone Data",
                               tableOutput("Drone_table")),
-                     ####Tab 4: Includes outputs to help with testing or troubleshooting####
+                     ####Tab 5: Includes outputs to help with testing or troubleshooting####
                      tabPanel("For me (troubleshooting)",
                               textOutput("text_me"),
                               textOutput("text_me_two"),
