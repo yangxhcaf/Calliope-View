@@ -17,7 +17,9 @@ source('Functions/keyword_lists_function.R')
 
 ####———MAP DATA———####
 
-Fieldsites_JSON <- fromJSON('http://guest:guest@128.196.38.100:9200/sites/_search?size=500')
+Fieldsites_JSON <- fromJSON('http://guest:guest@128.196.38.73:9200/sites/_search?size=500')
+# Unhashtag line below and hashtag line above when index down
+#Fieldsites_JSON <- fromJSON('NEON-data/Fieldsites.json')
 Fieldsites <- cbind(Fieldsites_JSON$hits$hits[-5], Fieldsites_JSON$hits$hits$`_source`[-4], Fieldsites_JSON$hits$hits$`_source`$boundary)
 names(Fieldsites)[9] <- "geo_type"
 
@@ -86,9 +88,9 @@ for (i in 1:length(TOS_data$siteID)) {
 TOS_data$domanID <- as.numeric(gsub(pattern = "D", replacement = "", x = TOS_data$domanID))
 
 #### DRONE ####
-#drone_json <- fromJSON('http://guest:guest@128.196.38.100:9200/metadata/_search?size=75')
+#drone_json <- fromJSON('http://guest:guest@128.196.38.73:9200/metadata/_search?size=75')
 # Unhashtag when index is down:
-drone_json <- fromJSON('Drone Images.json')
+drone_json <- fromJSON('NEON-data/Drone Images.json')
 drone_data <- cbind(drone_json$hits$hits[names(drone_json$hits$hits)!="_source"],
                     drone_json$hits$hits$`_source`[names(drone_json$hits$hits$`_source`)!="imageMetadata"],
                     drone_json$hits$hits$`_source`$imageMetadata[!(names(drone_json$hits$hits$`_source`$imageMetadata) %in% c("speed", "rotation"))],

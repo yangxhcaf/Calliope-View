@@ -161,14 +161,16 @@ function(input, output, session) {
       for (i in 1:length(Field_sites_poly_filtered()$coordinates)) {
         if (is.array(Field_sites_poly_filtered()$coordinates[[i]])) {
           proxy %>%
-            addPolylines(lng = Field_sites_poly_filtered()$coordinates[[i]][1,,1],
-                         lat = Field_sites_poly_filtered()$coordinates[[i]][1,,2],
-                         group = "Field Sites",
-                         color = "#49E2BD",
-                         layerId = Field_sites_poly_filtered()$code[i],
-                         popup = paste0("Boundaries for ",
-                                        Field_sites_poly_filtered()$name[i]),
-                         fillOpacity = 1
+            addPolygons(lng = Field_sites_poly_filtered()$coordinates[[i]][1,,1],
+                        lat = Field_sites_poly_filtered()$coordinates[[i]][1,,2],
+                        group = "Field Sites",
+                        color = "#49E2BD",
+                        layerId = Field_sites_poly_filtered()$code[i],
+                        popup = paste0("Boundaries for ",
+                                       Field_sites_poly_filtered()$name[i]),
+                        opacity = 1,
+                        fillOpacity = 0,
+                        highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7, bringToFront = TRUE)
             )
         } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
           proxy %>%
@@ -179,7 +181,9 @@ function(input, output, session) {
                          layerId = Field_sites_poly_filtered()$code[i],
                          popup = paste0("Boundaries for ",
                                         Field_sites_poly_filtered()$name[i]),
-                         highlightOptions = highlightOptions(stroke = )
+                         opacity = 1,
+                         fillOpacity = 0.4,
+                         highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7, bringToFront = TRUE)
             )
         }
       }
