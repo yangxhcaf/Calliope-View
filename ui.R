@@ -6,7 +6,7 @@ fluidPage(theme = shinytheme('cerulean'),
           navbarPage(tags$b("Calliope-View"),
                      ####Tab 1: Includes the map, and key with features like filtering data####
                      tabPanel("Interactive Map",
-                              dropdown(right = TRUE, status = "primary", size = "xs",
+                              dropdown(right = FALSE, status = "primary", size = "xs",
                                        selectInput(inputId = "NEONsite_zoom", label = "Zoom to a site:", choices = FieldSite_abbs),
                                        shiny::actionButton(inputId = "zoomtosite", label = "See site")
                               ),
