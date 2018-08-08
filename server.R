@@ -4,7 +4,7 @@ function(input, output, session) {
   ####INTERACTIVE MAP TAB####
   
   # Reactive value for layer control
-  legend <- reactiveValues(group = c("Drone", "Field Sites", "Domains", "Flightpaths", "TOS"))
+  legend <- reactiveValues(group = c("Drone", "Field Sites", "Domains", "Flightpaths", "TOS", "LTAR"))
   
   #### Map ####
   output$map <- renderLeaflet({
@@ -53,13 +53,13 @@ function(input, output, session) {
       clearGroup(group = "Domains") %>%
       addPolygons(data = Domain_unincluded(),
                   weight = 2,
-                  fillOpacity = '0.3',
+                  fillOpacity = '0.2',
                   group = "Domains",
                   popup = paste0(Domain_unincluded()$DomainName),
                   color = "gray") %>%
       addPolygons(data = Domain_included(),
                   weight = 2,
-                  fillOpacity = '0.3',
+                  fillOpacity = '0.2',
                   group = "Domains",
                   popup = paste0(Domain_included()$DomainName),
                   color = "blue")
@@ -189,7 +189,56 @@ function(input, output, session) {
       }
     }
   })
-  
+  #### —— Plot LTAR####
+  observe({
+    proxy <- leafletProxy("map")
+    proxy %>% removeShape(layerId = unique(Fieldsites_LTAR$code))
+    if (nrow(Fieldsites_LTAR) == 0) {
+      proxy %>% clearGroup(group = "LTAR")
+    } else {
+      for (i in 1:length(Fieldsites_LTAR$coordinates)) {
+        if (is.array(Fieldsites_LTAR$coordinates[[i]])) {
+          proxy %>%
+            addPolygons(lng = Fieldsites_LTAR$coordinates[[i]][1,,1],
+                        lat = Fieldsites_LTAR$coordinates[[i]][1,,2],
+                        group = "LTAR",
+                        color = "#e88437",
+                        layerId = Fieldsites_LTAR$code[i],
+                        popup = paste0("<b>LTAR site: </b>",
+                                       Fieldsites_LTAR$name[i], " (",
+                                       Fieldsites_LTAR$acronym[i], ")",
+                                       "<br><b>Code: </b>",
+                                       Fieldsites_LTAR$code[i],
+                                       "<br><b>Location: </b>",
+                                       Fieldsites_LTAR$city[i], ", ",
+                                       Fieldsites_LTAR$state[i]),
+                        opacity = 1,
+                        fillOpacity = 0,
+                        highlightOptions = highlightOptions(stroke = TRUE, color = "#FF9933", weight = 7, bringToFront = TRUE)
+            )
+        } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
+          proxy %>%
+            addPolylines(lng = Fieldsites_LTAR$coordinates[[i]][[1]][,1],
+                         lat = Fieldsites_LTAR$coordinates[[i]][[1]][,2],
+                         group = "LTAR",
+                         color = "#e88437",
+                         layerId = Fieldsites_LTAR$code[i],
+                         popup = paste0("<b>LTAR site: </b>",
+                                        Fieldsites_LTAR$name[i], " (",
+                                        Fieldsites_LTAR$acronym[i], ")",
+                                        "<br><b>Code: </b>",
+                                        Fieldsites_LTAR$code[i],
+                                        "<br><b>Location: </b>",
+                                        Fieldsites_LTAR$city[i], ", ",
+                                        Fieldsites_LTAR$state[i]),
+                         opacity = 1,
+                         fillOpacity = 0.4,
+                         highlightOptions = highlightOptions(stroke = TRUE, color = "#FF9933", weight = 7, bringToFront = TRUE)
+            )
+        }
+      }
+    }
+  })
   
   #### DRONE ####
   

@@ -17,13 +17,21 @@ source('Functions/keyword_lists_function.R')
 
 ####———MAP DATA———####
 
-Fieldsites_JSON <- fromJSON('http://guest:guest@128.196.38.73:9200/sites/_search?size=500')
+#Fieldsites_JSON <- fromJSON('http://guest:guest@128.196.38.73:9200/sites/_search?size=500')
 # Unhashtag line below and hashtag line above when index down
-#Fieldsites_JSON <- fromJSON('NEON-data/Fieldsites.json')
+Fieldsites_JSON <- fromJSON('NEON-data/Fieldsites.json')
 Fieldsites <- cbind(Fieldsites_JSON$hits$hits[-5], Fieldsites_JSON$hits$hits$`_source`[-4], Fieldsites_JSON$hits$hits$`_source`$boundary)
 names(Fieldsites)[9] <- "geo_type"
 
+####——LTAR——####
 
+Fieldsites_LTAR <- Fieldsites %>% filter(type %in% "LTAR")
+for (i in 1:nrow(Fieldsites_LTAR)) {
+  Fieldsites_LTAR$code[i] <- strsplit(Fieldsites_LTAR$code[i], "LTAR-")[[1]][2]
+  Fieldsites_LTAR$acronym[i] <- strsplit(Fieldsites_LTAR$details[[i]][1], ":")[[1]][2]
+  Fieldsites_LTAR$city[i] <- strsplit(Fieldsites_LTAR$details[[i]][2], ":")[[1]][2]
+  Fieldsites_LTAR$state[i] <- strsplit(Fieldsites_LTAR$details[[i]][3], ":")[[1]][2]
+}
 
 ####——NEON——####
 
