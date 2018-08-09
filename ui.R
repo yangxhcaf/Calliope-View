@@ -136,9 +136,10 @@ fluidPage(theme = shinytheme('cerulean'),
                                                                    textInput(inputId = "drone_username", label = "Username", placeholder = "guest"),
                                                                    passwordInput(inputId = "drone_password", label = "Password", placeholder = "guest"),
                                                                    actionButton(inputId = "drone_login", label = "Pull data")),
+                                                          #### —— Filter Data ####
                                                           tabPanel("Filter data",
                                                                    checkboxInput(inputId = "only_neon", label = "Only include NEON"),
-                                                                   selectInput(inputId = "Drone_site", label = "Filter by NEON Site", choices = unique(drone_data$neonSiteCode)[!(unique(drone_data$neonSiteCode) %in% NA)], selected = unique(drone_data$neonSiteCode), multiple = TRUE)
+                                                                   selectInput(inputId = "drone_site", label = "Filter by NEON Site", choices = unique(drone_data$neonSiteCode)[!(unique(drone_data$neonSiteCode) %in% NA)], selected = unique(drone_data$neonSiteCode), multiple = TRUE)
                                                                    )
                                                         )
                                                  ),
