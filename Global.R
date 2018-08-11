@@ -95,6 +95,10 @@ for (i in 1:length(TOS_data$siteID)) {
 }
 TOS_data$domanID <- as.numeric(gsub(pattern = "D", replacement = "", x = TOS_data$domanID))
 
+#### Miscellaneous Variables ####
+
+NEON_datatypes <- c("Airborne Observation Platform (AOP)", "Aquatic Instrument System (AIS)", "Aquatic Observation System (AOS)","Terrestrial Instrument System (TIS)", "Terrestrial Observation System (TOS)")
+
 #### DRONE ####
 #drone_json <- fromJSON('http://guest:guest@128.196.38.73:9200/metadata/_search?size=75')
 # Unhashtag when index is down:

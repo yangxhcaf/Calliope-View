@@ -295,14 +295,22 @@ function(input, output, session) {
   NEONproducts_product <<- nneo_products() # Added this variable up here because one item in finding by "site" needed it
   NEONproducts_site <- reactive(NEONproducts_product[filter_site(site = input$NEONsite_site),])
   # list: getting data frame of availability based on site code
-  # Filter by keywords
+  # Filter by keywords, type
   keyword_lists(list = FieldSite_abbs)
   output$ui_selectkeywords_site <- renderUI({
     selectInput(inputId = "NEONproductkeywords_site", label = "Keywords", choices = get(x = input$NEONsite_site, envir = .NEON_keywords) ,multiple = TRUE)
   })
-  NEONproducts_site_keyword <- reactive(as.data.frame(cbind('Product Name' = NEONproducts_site()$productName, 'Product ID' = NEONproducts_site()$productCode, "keywords" = NEONproducts_site()$keywords))[order(NEONproducts_site()$productName),])
-  keyword_filters_site <- reactive(filter_keyword(column = NEONproducts_site_keyword()$keywords, keywords = input$NEONproductkeywords_site))
-  NEONproductlist_site <- reactive(NEONproducts_site_keyword()[keyword_filters_site(),])
+  NEONproducts_site_filter <- reactive(as.data.frame(cbind('Product Name' = NEONproducts_site()$productName, 'Product ID' = NEONproducts_site()$productCode, "keywords" = NEONproducts_site()$keywords, "producttype" = NEONproducts_site()$productScienceTeam))[order(NEONproducts_site()$productName),])
+  keyword_filters_site <- reactive(filter_keyword(column = NEONproducts_site_filter()$keywords, keywords = input$NEONproductkeywords_site))
+  NEONproductlist_site_filtered_keyword <- reactive(NEONproducts_site_filter()[keyword_filters_site(),])
+  datatype_filters_site <- reactive({
+    if (is.null(input$selectproducttype_site)) {
+      NEON_datatypes
+    } else {
+      input$selectproducttype_site
+    }
+  })
+  NEONproductlist_site <- reactive(NEONproductlist_site_filtered_keyword()[(NEONproductlist_site_filtered_keyword()$producttype %in% datatype_filters_site()),])
   # single: filtering column of products for one site through ID
   NEONproductID_site <- reactive(req(
     if (gsub(pattern = " ", replacement = "", x = input$NEONproductID_site) == "") {
@@ -347,7 +355,7 @@ function(input, output, session) {
   ####—— 1b: By Product:####
   # Variables
   # list: getting data table with products and IDs
-  # Filter by keywords
+  # Filter by keywords, type, theme
   keywords <- NULL
   for (i in 1:length(NEONproducts_product$keywords)) {
     keywords <- c(keywords, NEONproducts_product$keywords[[i]])
@@ -355,12 +363,19 @@ function(input, output, session) {
   keywords <- unique(keywords)
   keywords <- sort(keywords)
   output$ui_selectkeywords_product <- renderUI(selectInput(inputId = "NEONproductkeywords_product", label = "Keywords", choices = keywords, multiple = TRUE))
-  NEONproducts_product_keyword <- NEONproducts_product[c("productName", "productCode", "keywords")]
-  names(NEONproducts_product_keyword) <- c('Product Name', 'Product ID', 'keywords')
-  NEONproducts_product_keyword <- NEONproducts_product_keyword[order(NEONproducts_product_keyword$`Product Name`),]
-  keyword_filters_product <- reactive(filter_keyword(column = NEONproducts_product_keyword$keywords, keywords = input$NEONproductkeywords_product))
-  NEONproductlist_product <- reactive(NEONproducts_product_keyword[keyword_filters_product(),])
-  # single: filtering one column of parent NEON products table through ID
+  NEONproduct_products_filter <- NEONproducts_product[c("productName", "productCode", "keywords", "productScienceTeam")]
+  names(NEONproduct_products_filter) <- c('Product Name', 'Product ID', 'keywords', "producttype")
+  NEONproduct_products_filter <- NEONproduct_products_filter[order(NEONproduct_products_filter$`Product Name`),]
+  keyword_filters_product <- reactive(filter_keyword(column = NEONproduct_products_filter$keywords, keywords = input$NEONproductkeywords_product))
+  datatype_filters_product <- reactive({
+    if (is.null(input$selectproducttype_product)) {
+      NEON_datatypes
+    } else {
+      input$selectproducttype_product
+    }
+  })
+  NEONproductlist_product <- reactive(NEONproduct_products_filter[keyword_filters_product(),] %>% filter(`producttype` %in% datatype_filters_product()))
+  # single: filtering one row of parent NEON products table through ID
   NEONproductID_product <- reactive(req(
     ifelse(gsub(pattern = " ", replacement = "", x = input$NEONproductID_product) == "",
            yes = "random string that will not match to anything",
@@ -400,6 +415,7 @@ function(input, output, session) {
   # Variables
   Product_ID_general <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_general)))
   Product_ID_specific <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_specific)))
+  Product_ID_AOP <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_AOP)))
   Field_Site_general <- reactive(req(
     if (input$location_NEON_general == "All (default)") {
       "all"
@@ -408,11 +424,13 @@ function(input, output, session) {
     })
   )
   Field_Site_specific <- reactive(req(input$location_NEON_specific))
+  Field_Site_AOP <- reactive(req(input$location_NEON_AOP))
   Package_type_general <- reactive(req(input$package_type_general))
   Package_type_specific <- reactive(req(input$package_type_specific))
   Date_specific_long <- reactive(req(as.character(input$date_NEON)))
   Date_specific_parts <- reactive(req(strsplit(Date_specific_long(), "-")[[1]]))
   Date_specific <- reactive(req(paste0(Date_specific_parts()[1], "-", Date_specific_parts()[2])))
+  Year_AOP <- reactive(req(strsplit(as.character(input$year_AOP), "-")[[1]][1]))
   Folder_path_specific <- reactive(paste0("../NEON_", Field_Site_specific(), "_", Date_specific()))
   # Download NEON data: general
   observeEvent(eventExpr = input$download_NEON_general,
@@ -431,6 +449,26 @@ function(input, output, session) {
                  download <- try(getPackage(dpID = Product_ID_specific(), site_code = Field_Site_specific(), year_month = Date_specific(), package = Package_type_specific(), savepath = Folder_path_specific()), silent = TRUE)
                  if (class(download) == "try-error") {
                    sendSweetAlert(session, title = "Download failed", text = paste0("This could be due to the data package you tried to obtain or the neonUtlities package used to pull data. Read the error message: ", download), type = 'error')
+                 } else {
+                   sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
+                 }
+               })
+  # Download NEON data: AOP
+  output$check_AOP <- renderPrint({
+    product_table <- reactive(NEONproducts_product[NEONproducts_product$productCode == Product_ID_AOP(),])
+    if (nrow(product_table()) != 0) {
+      if (product_table()$productScienceTeamAbbr == "AOP") {
+        "YES"
+      } else {
+        "NO"
+      }
+    }
+  })
+  observeEvent(eventExpr = input$download_NEON_AOP,
+               handlerExpr = {
+                 download <- try(byFileAOP(dpID = Product_ID_AOP(), site = Field_Site_AOP(), year = Year_AOP(), check.size = FALSE, savepath = '..'), silent = TRUE)
+                 if (class(download) == "try-error") {
+                   sendSweetAlert(session, title = "Download failed", text = paste0("This could be due to the data package you tried to obtain or the neonUtlities package used to pull data. Read the error message: ", strsplit(download, ":")[[1]][2]), type = 'error')
                  } else {
                    sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
                  }
