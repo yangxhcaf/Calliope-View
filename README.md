@@ -45,6 +45,7 @@ A few packages need to be downloaded: <br>
 ```
 install.packages(c('leaflet','leaflet.extras','devtools','nneo','shinythemes','shinyWidgets','sf','rgdal','jsonlite'))
 devtools::install_github("NEONScience/NEON-utilities/neonUtilities", dependencies=TRUE)
+devtools::install_github("alexioannides/elasticsearchr")
 ```
 
 **Note: [Mac OS X](https://cran.r-project.org/bin/macosx/tools/) currently requires `gfortran` and `clang` be installed in addition to the latest version of R (v3.5.1 "Feather Spray")** 
