@@ -40,6 +40,7 @@ A few packages need to be downloaded: <br>
 * [`shinyWidgets`](https://github.com/dreamRs/shinyWidgets): provides costumized and "pimp[ed]" up widgets for shiny.
 * [`sf`](https://github.com/r-spatial/sf) and [`rgdal`](https://github.com/cran/rgdal): provide access to simple feature geometries.
 * [`jsonlite`](https://github.com/cran/jsonlite): helps deal with JSON structures.
+* [`elasticsearchr`](https://github.com/AlexIoannides/elasticsearchr): is responsible for interaction with [Elasticsearch](https://www.elastic.co/) indexes.
 
 ```
 install.packages(c('leaflet','leaflet.extras','devtools','nneo','shinythemes','shinyWidgets','sf','rgdal','jsonlite'))
