@@ -9,6 +9,7 @@ library(rgdal)
 library(neonUtilities)
 library(shinyWidgets)
 library(nneo)
+library(elasticsearchr)
 source('Functions/directoryWidget/directoryInput.R')
 source('Functions/flight_function.R')
 source('Functions/filter_keyword_function.R')
@@ -128,6 +129,70 @@ drone_data <- drone_data[c("_id", "neonSiteCode", "Latitude", "Longitude", "alti
                            "collectionID", "storagePath", "_type", "_index", "_score")]
 drone_data <- unique(drone_data)
 
+#### — Indexing ####
+index <- elastic(cluster_url = 'http://guest:guest@128.196.38.73:9200', index = "metadata", doc_type = "_doc")
+# drone_dates <- index %search% aggs('{
+#   "dates": {
+#     "stats": {
+#       "field": "imageMetadata.dateTaken"
+#     }
+#   }
+# }')
+# drone_dayofweek <- index %search% aggs('{
+#   "dayofweek": {
+#     "terms": {
+#       "field": "imageMetadata.dayOfWeekTaken",
+#       "size": 500
+#     }
+#   }
+# }')
+# drone_sites <- index %search% aggs('{
+#   "sites": {
+#     "terms": {
+#       "field": "imageMetadata.siteCode",
+#       "size": 500
+#     }
+#   }
+# }')
+# drone_altitude <- index %search% aggs('{
+#   "altitude": {
+#     "stats": {
+#       "field": "imageMetadata.altitude"
+#     }
+#   }
+# }')
+# drone_elevation <- index %search% aggs('{
+#   "elevation": {
+#     "stats": {
+#       "field": "imageMetadata.elevation"
+#     }
+#   }
+# }')
+# drone_maker <- index %search% aggs('{
+#   "maker": {
+#     "terms": {
+#       "field": "imageMetadata.droneMaker",
+#       "size": 500
+#     }
+#   }
+# }')
+# drone_camera <- index %search% aggs('{
+#   "camera": {
+#     "terms": {
+#       "field": "imageMetadata.cameraModel",
+#       "size": 500
+#     }
+#   }
+# }')
+# drone_filtype <- index %search% aggs('{
+#   "filetype": {
+#     "terms": {
+#       "field": "imageMetadata.fileType"
+#     }
+#   }
+# }')
+
+
 ####———MAP ICONS———####
 NEON_icon <- makeIcon(iconUrl = "Img/NEON.png",
                       iconWidth = 30, iconHeight = 30,
@@ -136,3 +201,4 @@ NEON_icon <- makeIcon(iconUrl = "Img/NEON.png",
 drone_image_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/map-pin.png",
                              iconAnchorX = 24, iconAnchorY = 48,
                              popupAnchorX = -1, popupAnchorY = -48)
+dropdown_icon <- awesomeIcons(icon = "information-circle", library = "ion")

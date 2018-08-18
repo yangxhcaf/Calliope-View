@@ -273,7 +273,7 @@ function(input, output, session) {
     proxy <- leafletProxy("map")
     proxy %>%
       clearGroup(group = "Drone") %>%
-      addMarkers(data = Drone_filtered_NEON(),
+      addCircleMarkers(data = Drone_filtered_NEON(),
                  popup = paste0("<b>Date taken: </b>",
                                 Drone_filtered_NEON()$yearTaken, "/", Drone_filtered_NEON()$monthTaken, "/", Drone_filtered_NEON()$dayTaken,
                                 "<br><b>Altitude: </b>",
@@ -281,7 +281,10 @@ function(input, output, session) {
                                 "<br><b>NEON site (if applicable): </b>",
                                 Drone_filtered_NEON()$neonSiteCode),
                  group = "Drone",
-                 icon = drone_image_icon)
+                 clusterOptions = markerClusterOptions(),
+                 weight = 3,
+                 opacity = 0.75)
+                 #icon = drone_image_icon)
   })
   #### NEON ####
   observeEvent(input$zoomtosite,
@@ -311,6 +314,9 @@ function(input, output, session) {
     }
   })
   NEONproductlist_site <- reactive(NEONproductlist_site_filtered_keyword()[(NEONproductlist_site_filtered_keyword()$producttype %in% datatype_filters_site()),])
+  # for dropdown
+  output$dropdown_site <- renderPrint(FieldSite_point$siteName[FieldSite_point$siteCode %in% input$NEONsite_zoom])
+  output$dataproduct_number <- renderPrint(nrow(NEONproducts_product[filter_site(site = input$NEONsite_zoom),]))
   # single: filtering column of products for one site through ID
   NEONproductID_site <- reactive(req(
     if (gsub(pattern = " ", replacement = "", x = input$NEONproductID_site) == "") {

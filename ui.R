@@ -6,9 +6,13 @@ fluidPage(theme = shinytheme('cerulean'),
           navbarPage(tags$b("Calliope-View"),
                      ####Tab 1: Includes the map, and key with features like filtering data####
                      tabPanel("Interactive Map",
-                              dropdown(right = FALSE, status = "primary", size = "xs",
-                                       selectInput(inputId = "NEONsite_zoom", label = "Zoom to a site:", choices = FieldSite_abbs),
-                                       shiny::actionButton(inputId = "zoomtosite", label = "See site")
+                              dropdown(right = FALSE, status = "primary", size = "sm", icon = icon("info-circle"), width = "45vw",
+                                       selectInput(inputId = "NEONsite_zoom", label = "Site info:", choices = FieldSite_abbs),
+                                       tags$b("Name and type"),
+                                       verbatimTextOutput(outputId = "dropdown_site", placeholder = TRUE),
+                                       tags$b("Number of data products available"),
+                                       verbatimTextOutput(outputId = "dataproduct_number", placeholder = TRUE),
+                                       shiny::actionButton(inputId = "zoomtosite", label = "Zoom to site")
                               ),
                               sidebarLayout(
                                 sidebarPanel(width = 6,
@@ -18,7 +22,7 @@ fluidPage(theme = shinytheme('cerulean'),
                                                  tabsetPanel(
                                                    #### —— STEP 1: Find Data####
                                                    tabPanel("Step 1- Find Data",
-                                                            radioButtons(inputId = "NEON_browsing_type", label = "Browsing method", choices = list("Start with Site" = "site", "Start with Product" = "product")),
+                                                            radioButtons(inputId = "NEON_browsing_type", label = "Browsing method", choices = list("Start with Site" = "site", "Start with Product" = "product"), inline = TRUE),
                                                             conditionalPanel("input.NEON_browsing_type == 'site'",
                                                                              includeMarkdown('Rmd/NEON_browsing_site.Rmd'),
                                                                              radioButtons(inputId = "NEONbrowsingstep_site", label = NULL, choices = list("Find Product" = "list", "Get Availability" = "single"), inline = TRUE),
