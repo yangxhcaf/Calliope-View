@@ -38,7 +38,7 @@ A few packages need to be downloaded: <br>
 * [`neonUtilities`](https://github.com/NEONScience/NEON-utilities/tree/master/neonUtilities) and [`nneo`](https://github.com/ropensci/nneo): used to pull datasets from NEON.
 * [`shinythemes`](https://github.com/rstudio/shinythemes): alter the appearance of the Shiny app. 
 * [`shinyWidgets`](https://github.com/dreamRs/shinyWidgets): provides costumized and "pimp[ed]" up widgets for shiny.
-* [`sf`](https://github.com/r-spatial/sf) and [`rgdal`](https://github.com/cran/rgdal): provide access to simple feature geometries.
+* [`sf`](https://github.com/r-spatial/sf): provides access to simple feature geometries.
 * [`jsonlite`](https://github.com/cran/jsonlite): helps deal with JSON structures.
 * [`elasticsearchr`](https://github.com/AlexIoannides/elasticsearchr): is responsible for interaction with [Elasticsearch](https://www.elastic.co/) indexes.
 
