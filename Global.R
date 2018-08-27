@@ -1,13 +1,13 @@
 library(shiny)
 library(shinythemes)
+library(shinyWidgets)
+library(shinyBS)
 library(leaflet)
 library(leaflet.extras)
 library(dplyr)
 library(jsonlite)
 library(sf)
-library(rgdal)
 library(neonUtilities)
-library(shinyWidgets)
 library(nneo)
 library(elasticsearchr)
 source('Functions/directoryWidget/directoryInput.R')
@@ -15,6 +15,13 @@ source('Functions/flight_function.R')
 source('Functions/filter_keyword_function.R')
 source('Functions/filter_site_function.R')
 source('Functions/keyword_lists_function.R')
+
+if (!dir.exists("../NEON Downloads")) {
+  dir.create("../NEON Downloads")
+  dir_created <- TRUE
+} else {
+  dir_created <- FALSE
+}
 
 ####———MAP DATA———####
 
@@ -43,20 +50,48 @@ FieldSite_point_JSON <- fromJSON('http://data.neonscience.org/api/v0/sites')
 # Create a data frame using cbind()
 FieldSite_point <- FieldSite_point_JSON$data #cbind(FieldSite_point_JSON$features$properties,FieldSite_point_JSON$features$geometry)
 FieldSite_point$domainCode <- as.numeric(gsub(pattern = "D", replacement = "", x = FieldSite_point$domainCode))
-FieldSite_abbs <- FieldSite_point$siteCode
-## Retrieve polygon data for NEON Field Sites
-Fieldsites_NEON <- Fieldsites %>% filter(type %in% "NEON")
-for (i in 1:nrow(Fieldsites_NEON)) {
-  Fieldsites_NEON$code[i] <- strsplit(Fieldsites_NEON$code[i], "-")[[1]][2]
-  Fieldsites_NEON$siteType[i] <- strsplit(Fieldsites_NEON$name[i], ", ")[[1]][2]
-  Fieldsites_NEON$name[i] <- strsplit(Fieldsites_NEON$name[i], ", ")[[1]][1]
-  Fieldsites_NEON$domainName[i] <- strsplit(Fieldsites_NEON$details[[i]][1], ":")[[1]][2]
-  Fieldsites_NEON$domainCode[i] <- strsplit(Fieldsites_NEON$details[[i]][2], ":")[[1]][2]
-  Fieldsites_NEON$domainCode[i] <- strsplit(Fieldsites_NEON$domainCode[i], "D")[[1]][2]  
-  Fieldsites_NEON$stateCode[i] <- strsplit(Fieldsites_NEON$details[[i]][5], ":")[[1]][2]
-  Fieldsites_NEON$stateName[i] <- strsplit(Fieldsites_NEON$details[[i]][6], ":")[[1]][2]
+FieldSite_extra <- read.csv('NEON-data/Fieldsites_extrainfo.csv', colClasses = "character")
+FieldSite_extra <- FieldSite_extra[order(FieldSite_extra$Site.ID),]
+for (i in 1:nrow(FieldSite_extra)) {
+  FieldSite_extra$Site.Type[i] <- strsplit(FieldSite_extra$Site.Type[i], " ")[[1]][2]
+  if (FieldSite_extra$Site.Type[i] == "Aquatic") {
+    FieldSite_extra$Site.Subtype[i] <- paste0(FieldSite_extra$Site.Type[i], " - ", FieldSite_extra$Site.Subtype[i]) 
+  } else {
+    FieldSite_extra$Site.Subtype[i] <- FieldSite_extra$Site.Type[i]
+  }
 }
-Fieldsites_NEON$domainCode <- as.numeric(Fieldsites_NEON$domainCode)
+FieldSite_point$Habitat <- FieldSite_extra$Site.Type
+FieldSite_point$`Habitat Specific` <- FieldSite_extra$Site.Subtype
+FieldSite_point$Host <- FieldSite_extra$Site.Host
+
+# List of field site abbreviations
+FieldSite_abbs <- FieldSite_point$siteCode
+FieldSite_Tes <- FieldSite_point$siteCode[FieldSite_point$Habitat %in% "Terrestrial"]
+FieldSite_Aqu <- FieldSite_point$siteCode[FieldSite_point$Habitat %in% "Aquatic"]
+
+## Retrieve polygon data for NEON Field Sites
+FieldSite_poly <- cbind(Fieldsites_JSON$hits$hits[-5], Fieldsites_JSON$hits$hits$`_source`[-4], Fieldsites_JSON$hits$hits$`_source`$boundary)
+names(FieldSite_poly)[9] <- "geo_type"
+FieldSite_poly <- FieldSite_poly %>% filter(type %in% "NEON")
+for (i in 1:nrow(FieldSite_poly)) {
+  FieldSite_poly$code[i] <- strsplit(FieldSite_poly$code[i], "-")[[1]][2]
+  FieldSite_poly$siteType[i] <- strsplit(FieldSite_poly$name[i], ", ")[[1]][2]
+  FieldSite_poly$name[i] <- strsplit(FieldSite_poly$name[i], ", ")[[1]][1]
+  FieldSite_poly$domainName[i] <- strsplit(FieldSite_poly$details[[i]][1], ":")[[1]][2]
+  FieldSite_poly$domainCode[i] <- strsplit(FieldSite_poly$details[[i]][2], ":")[[1]][2]
+  FieldSite_poly$domainCode[i] <- strsplit(FieldSite_poly$domainCode[i], "D")[[1]][2]  
+  FieldSite_poly$stateCode[i] <- strsplit(FieldSite_poly$details[[i]][5], ":")[[1]][2]
+  FieldSite_poly$stateName[i] <- strsplit(FieldSite_poly$details[[i]][6], ":")[[1]][2]
+}
+FieldSite_poly$domainCode <- as.numeric(FieldSite_poly$domainCode)
+
+## Retrive Fieldsite Locations
+FieldSite_locations_tes <- read.csv("NEON-data/Fieldsites_locations_tes", stringsAsFactors = FALSE)
+FieldSite_plots_tes <- read.csv("NEON-data/Fieldsites_plots_tes", stringsAsFactors = FALSE)[-1]
+FieldSite_locations_aqu <- read.csv("NEON-data/Fieldsites_locations_aqu", stringsAsFactors = FALSE)
+aqu_location_filter <- startsWith(FieldSite_locations_aqu$Name, "WELL") | startsWith(FieldSite_locations_aqu$Name, "METSTN") | grepl("S*LOC", FieldSite_locations_aqu$Name) |startsWith(FieldSite_locations_aqu$Name, "INLET") | startsWith(FieldSite_locations_aqu$Name, "OUTLET") | startsWith(FieldSite_locations_aqu$Name, "BUOY") | startsWith(FieldSite_locations_aqu$Name, "SGAUGE") |
+  endsWith(FieldSite_locations_aqu$Name, "reach.bottom") | endsWith(FieldSite_locations_aqu$Name, "reach.top") | grepl("riparian[.]point", FieldSite_locations_aqu$Name) | grepl("riparian[.]transect", FieldSite_locations_aqu$Name)
+FieldSite_locations_aqu <- FieldSite_locations_aqu[aqu_location_filter,]
 
 ####NEON Domains####
 ## Retrive data from NEON Domains in JSON format
@@ -99,6 +134,10 @@ TOS_data$domanID <- as.numeric(gsub(pattern = "D", replacement = "", x = TOS_dat
 #### Miscellaneous Variables ####
 
 NEON_datatypes <- c("Airborne Observation Platform (AOP)", "Aquatic Instrument System (AIS)", "Aquatic Observation System (AOS)","Terrestrial Instrument System (TIS)", "Terrestrial Observation System (TOS)")
+baseplot_text <- "30/site: Distributed Base Plots support a variety of plant productivity, plant diversity, soil, biogeochemistry, microbe and beetle sampling. Distributed Base Plots are 40m x 40m."
+birdgrid_text <- "5-15/site: Bird Grids consist of 9 sampling points within a 500m x 500m square. Each point is 250m apart. Where possible, Bird Grids are colocated with Distributed Base Plots by placing the Bird Grid center in close proximity to the center of the Base Plot. At smaller sites, a single point count is done at the south-west corner of the Distributed Base Plot."
+mosquitoplot_text <- "10/site: At each Mosquito Point, one CO2 trap is established. Due to the frequency of sampling and the temporal sampling constraints, Mosquito Points are located within 45m of roads."
+phenologyplot_text <- "1-2/site: Plant phenology observations are made along a transect loop or plot in or around the primaru airshed. When possible, one plot is established north of the tower to calibrate phenology camera images captured from sensors on the tower. If there is insufficient space north of the tower for a 200m x 200m plot or if the vegetation does not match the primary airshed an additional plot is established."
 
 #### DRONE ####
 #drone_json <- fromJSON('http://guest:guest@128.196.38.73:9200/metadata/_search?size=75')
@@ -201,4 +240,17 @@ NEON_icon <- makeIcon(iconUrl = "Img/NEON.png",
 drone_image_icon <- makeIcon(iconUrl = "https://png.icons8.com/color/48/000000/map-pin.png",
                              iconAnchorX = 24, iconAnchorY = 48,
                              popupAnchorX = -1, popupAnchorY = -48)
-dropdown_icon <- awesomeIcons(icon = "information-circle", library = "ion")
+NEON_locations <- iconList(
+  `Distributed Base Plot` = makeIcon(iconUrl = "Img/distributedBaseplot.png", iconWidth = 15, iconHeight = 15,
+                                     iconAnchorX = 7.5, iconAnchorY = 7.5, popupAnchorX = -1, popupAnchorY = -7.5),
+  `Distributed Bird Grid` = makeIcon(iconUrl = "Img/birdGrid.png", iconWidth = 15, iconHeight = 15,
+                                     iconAnchorX = 7.5, iconAnchorY = 7.5, popupAnchorX = -1, popupAnchorY = -7.5),
+  `Distributed Mosquito Plot` = makeIcon(iconUrl = "Img/mosquito.png", iconWidth = 15, iconHeight = 15,
+                                         iconAnchorX = 7.5, iconAnchorY = 7.5, popupAnchorX = -1, popupAnchorY = -7.5),
+  `Distributed Mammal Grid` = makeIcon(iconUrl = "Img/mammal.png", iconWidth = 15, iconHeight = 15,
+                                       iconAnchorX = 7.5, iconAnchorY = 7.5, popupAnchorX = -1, popupAnchorY = -7.5),
+  `Distributed Tick Plot` = makeIcon(iconUrl = "Img/tick.png", iconWidth = 15, iconHeight = 15,
+                                     iconAnchorX = 7.5, iconAnchorY = 7.5, popupAnchorX = -1, popupAnchorY = -7.5),
+  `Tower Phenology Plot` = makeIcon(iconUrl = "Img/phenology.png", iconWidth = 15, iconHeight = 15,
+                                    iconAnchorX = 7.5, iconAnchorY = 7.5, popupAnchorX = -1, popupAnchorY = -7.5)
+)

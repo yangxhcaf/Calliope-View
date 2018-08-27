@@ -1,10 +1,17 @@
 # Shiny server
 function(input, output, session) {
   
+  # Initialization
+  if (dir_created == TRUE) {
+    showNotification(ui = "'NEON Downloads' folder created in the directory containing this app. All downloads will go to this folder.", duration = 20, type = "message")
+  } else {
+    showNotification(ui = "Welcome back!", duration = 10, type = "message")
+  }
+  
   ####INTERACTIVE MAP TAB####
   
   # Reactive value for layer control
-  legend <- reactiveValues(group = c("Drone", "Field Sites", "Domains", "Flightpaths", "TOS", "LTAR"))
+  legend <- reactiveValues(group = c("Drone", "Field Sites", "Domains", "Flightpaths", "TOS", "LTAR", "Sub Locations"))
   
   #### Map ####
   output$map <- renderLeaflet({
@@ -40,12 +47,27 @@ function(input, output, session) {
   #### —— Filtered Features ####
   Domain_IDs <- reactive(domains$DomainID[domains$Domain %in% input$fieldsite_domain])
   Field_sites_point_filtered <- reactive(FieldSite_point %>% filter(siteType %in% input$fieldsite_type) %>%
-                                           filter(domainCode %in% Domain_IDs()))
-  Field_sites_poly_filtered <- reactive(Fieldsites_NEON %>% filter(code %in% Field_sites_point_filtered()$siteCode))
+                                           filter(domainCode %in% Domain_IDs()) %>%
+                                           filter(Habitat %in% input$fieldsite_habitat))
+  Field_sites_poly_filtered <- reactive(FieldSite_poly %>% filter(code %in% Field_sites_point_filtered()$siteCode))
   Domain_included <- reactive(domain_data %>% filter(DomainName %in% input$fieldsite_domain))
   Domain_unincluded <- reactive(domain_data %>% filter(!(DomainName %in% input$fieldsite_domain)))
   TOS_data_filtered <- reactive(TOS_data %>% filter(siteID %in% Field_sites_point_filtered()$siteCode))
-  Flight_data_filtered <- reactive(flight_data %>% filter(SiteAbb %in% Field_sites_point_filtered()$siteCode) %>% filter(Year %in% input$flightpath_year))
+  Flight_data_filtered <- reactive(flight_data %>% filter(SiteAbb %in% Field_sites_point_filtered()$siteCode) %>%
+                                     filter(Year %in% input$flightpath_year))
+  
+  Subloc_tes_plots_base <- reactive(FieldSite_plots_tes %>% filter(Type %in% "Distributed Base Plot") %>%
+                                      filter(Site %in% input$fieldsite_sublocs))
+  Subloc_tes_plots_bird <- reactive(FieldSite_plots_tes %>% filter(Type %in% "Distributed Bird Grid") %>%
+                                      filter(Site %in% input$fieldsite_sublocs))
+  Subloc_tes_plots_mam <- reactive(FieldSite_plots_tes %>% filter(Type %in% "Distributed Mammal Grid") %>%
+                                     filter(Site %in% input$fieldsite_sublocs))
+  Subloc_tes_plots_mos <- reactive(FieldSite_plots_tes %>% filter(Type %in% "Distributed Mosquito Plot") %>%
+                                     filter(Site %in% input$fieldsite_sublocs))
+  Subloc_tes_plots_tick <- reactive(FieldSite_plots_tes %>% filter(Type %in% "Distributed Tick Plot") %>%
+                                      filter(Site %in% input$fieldsite_sublocs))
+  Subloc_tes_plots_phe <- reactive(FieldSite_plots_tes %>% filter(Type %in% "Tower Phenology Plot") %>%
+                                     filter(Site %in% input$fieldsite_sublocs))
   #### —— Plot Domains #### 
   observe({
     proxy <- leafletProxy("map")
@@ -53,13 +75,13 @@ function(input, output, session) {
       clearGroup(group = "Domains") %>%
       addPolygons(data = Domain_unincluded(),
                   weight = 2,
-                  fillOpacity = '0.2',
+                  fillOpacity = '0.18',
                   group = "Domains",
                   popup = paste0(Domain_unincluded()$DomainName),
                   color = "gray") %>%
       addPolygons(data = Domain_included(),
                   weight = 2,
-                  fillOpacity = '0.2',
+                  fillOpacity = '0.18',
                   group = "Domains",
                   popup = paste0(Domain_included()$DomainName),
                   color = "blue")
@@ -68,7 +90,7 @@ function(input, output, session) {
   #### —— Plot Flightpaths ####
   observe({
     proxy <- leafletProxy("map")
-   # pal <- colorFactor(palette = c("#FFFFFF", "#0000FF"), domain = Flight_data_filtered()$Year)
+    # pal <- colorFactor(palette = c("#FFFFFF", "#0000FF"), domain = Flight_data_filtered()$Year)
     if (nrow(Flight_data_filtered()) == 0) {
       proxy %>% clearGroup(group = "Flightpaths")
     } else {
@@ -90,7 +112,7 @@ function(input, output, session) {
                                    "<br><b>Version: </b>",
                                    Flight_data_filtered()$Version),
                     opacity = 0.3, 
-                    fillOpacity = 0.2
+                    fillOpacity = 0.06
         )
     }
   })
@@ -104,9 +126,7 @@ function(input, output, session) {
         addMarkers(data = TOS_data_filtered(),
                    lng = TOS_data_filtered()$longitd,
                    lat = TOS_data_filtered()$latitud,
-                   popup = paste0("<b>Site: </b>",
-                                  TOS_data_filtered()$siteID,
-                                  "<br><b>Plot ID: </b>",
+                   popup = paste0("<b>Plot ID: </b>",
                                   TOS_data_filtered()$plotID,
                                   "<br><b>Dimensions: </b>",
                                   TOS_data_filtered()$plotDim,
@@ -142,7 +162,11 @@ function(input, output, session) {
                                   "<br><b>State: </b>",
                                   Field_sites_point_filtered()$stateName,
                                   "<br><b>Site Type: </b>",
-                                  Field_sites_point_filtered()$siteType),
+                                  Field_sites_point_filtered()$siteType,
+                                  "<br><b>Habitat: </b>",
+                                  Field_sites_point_filtered()$`Habitat Specific`,
+                                  "<br><b>Host: </b>",
+                                  Field_sites_point_filtered()$Host),
                    clusterOptions = markerClusterOptions(),
                    label = paste0(Field_sites_point_filtered()$siteDescription),
                    icon = NEON_icon
@@ -152,7 +176,7 @@ function(input, output, session) {
   # Boundaries
   observe({
     proxy <- leafletProxy("map")
-    proxy %>% removeShape(layerId = unique(Fieldsites_NEON$code))
+    proxy %>% removeShape(layerId = unique(FieldSite_poly$code))
     if (nrow(Field_sites_poly_filtered()) == 0) {
       proxy %>% clearGroup(group = "Field Sites")
     } else {
@@ -168,7 +192,7 @@ function(input, output, session) {
                                        Field_sites_poly_filtered()$name[i]),
                         opacity = 1,
                         fillOpacity = 0,
-                        highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7, bringToFront = TRUE)
+                        highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7)
             )
         } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
           proxy %>%
@@ -181,12 +205,13 @@ function(input, output, session) {
                                         Field_sites_poly_filtered()$name[i]),
                          opacity = 1,
                          fillOpacity = 0.4,
-                         highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7, bringToFront = TRUE)
+                         highlightOptions = highlightOptions(stroke = TRUE, color = "#39ff14", weight = 7)
             )
         }
       }
     }
   })
+  
   #### —— Plot LTAR ####
   observe({
     proxy <- leafletProxy("map")
@@ -214,7 +239,7 @@ function(input, output, session) {
                         fillOpacity = 0,
                         highlightOptions = highlightOptions(stroke = TRUE, color = "#FF9933", weight = 7, bringToFront = TRUE)
             )
-        } else if (is.list(Field_sites_poly_filtered()$coordinates[[i]])) {
+        } else if (is.list(Fieldsites_LTAR$coordinates[[i]])) {
           proxy %>%
             addPolylines(lng = Fieldsites_LTAR$coordinates[[i]][[1]][,1],
                          lat = Fieldsites_LTAR$coordinates[[i]][[1]][,2],
@@ -236,6 +261,227 @@ function(input, output, session) {
         }
       }
     }
+  })
+  #### —— Plot Sub Locations ####
+  # Base
+  observe({
+    proxy <- leafletProxy('map')
+    if (input$sublocs_baseplot & nrow(Subloc_tes_plots_base()) != 0) {
+      for (i in 1:nrow(Subloc_tes_plots_base())) {
+        proxy %>%
+          addMarkers(data = Subloc_tes_plots_base()[i,],
+                     icon = ~NEON_locations[Subloc_tes_plots_base()$Type[i]],
+                     popup = paste0("<b>Plot: </b><br>",
+                                    Subloc_tes_plots_base()$Description[i],
+                                    "<br><b>Type: </b>",
+                                    Subloc_tes_plots_base()$Type[i],
+                                    "<br><b>Dimensions: </b>",
+                                    Subloc_tes_plots_base()$Plot.Size[i]),
+                     group = "Sub Locations",
+                     layerId = Subloc_tes_plots_base()$Name[i]) %>%
+          addRectangles(lng1 = geosphere::destPoint(p = c(Subloc_tes_plots_base()$Longitude[i], Subloc_tes_plots_base()$Latitude[i]), b = 225, d = 20*sqrt(2))[1],
+                        lat1 = geosphere::destPoint(p = c(Subloc_tes_plots_base()$Longitude[i], Subloc_tes_plots_base()$Latitude[i]), b = 225, d = 20*sqrt(2))[2],
+                        lng2 = geosphere::destPoint(p = c(Subloc_tes_plots_base()$Longitude[i], Subloc_tes_plots_base()$Latitude[i]), b = 45, d = 20*sqrt(2))[1],
+                        lat2 = geosphere::destPoint(p = c(Subloc_tes_plots_base()$Longitude[i], Subloc_tes_plots_base()$Latitude[i]), b = 45, d = 20*sqrt(2))[2],
+                        color = "#49E2BD",
+                        fillOpacity = 0,
+                        weight = 3,
+                        layerId = Subloc_tes_plots_base()$Name[i],
+                        popup = paste0("<b>Plot: </b><br>",
+                                       Subloc_tes_plots_base()$Description[i],
+                                       "<br><b>Type: </b>",
+                                       Subloc_tes_plots_base()$Type[i],
+                                       "<br><b>Dimensions: </b>",
+                                       Subloc_tes_plots_base()$Plot.Size[i])
+          )
+      }
+    }
+    else if (!input$sublocs_baseplot | (nrow(Subloc_tes_plots_base()) == 0)) {
+      proxy %>% removeMarker(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Distributed Base Plot"))$Name) %>% 
+        removeShape(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Distributed Base Plot"))$Name)
+    }
+  })
+  # Mammal
+  observe({
+    proxy <- leafletProxy('map')
+    if (input$sublocs_mammalgrid & nrow(Subloc_tes_plots_mam()) != 0) {
+      for (i in 1:nrow(Subloc_tes_plots_mam())) {
+        proxy %>%
+          addMarkers(data = Subloc_tes_plots_mam()[i,],
+                     icon = ~NEON_locations[Subloc_tes_plots_mam()$Type[i]],
+                     popup = paste0("<b>Plot: </b><br>",
+                                    Subloc_tes_plots_mam()$Description[i],
+                                    "<br><b>Type: </b>",
+                                    Subloc_tes_plots_mam()$Type[i],
+                                    "<br><b>Dimensions: </b>",
+                                    Subloc_tes_plots_mam()$Plot.Size[i]),
+                     group = "Sub Locations",
+                     layerId = Subloc_tes_plots_mam()$Name[i]) %>%
+          addRectangles(lng1 = geosphere::destPoint(p = c(Subloc_tes_plots_mam()$Longitude[i], Subloc_tes_plots_mam()$Latitude[i]), b = 225, d = 45*sqrt(2))[1],
+                        lat1 = geosphere::destPoint(p = c(Subloc_tes_plots_mam()$Longitude[i], Subloc_tes_plots_mam()$Latitude[i]), b = 225, d = 45*sqrt(2))[2],
+                        lng2 = geosphere::destPoint(p = c(Subloc_tes_plots_mam()$Longitude[i], Subloc_tes_plots_mam()$Latitude[i]), b = 45, d = 45*sqrt(2))[1],
+                        lat2 = geosphere::destPoint(p = c(Subloc_tes_plots_mam()$Longitude[i], Subloc_tes_plots_mam()$Latitude[i]), b = 45, d = 45*sqrt(2))[2],
+                        color = "#49E2BD",
+                        fillOpacity = 0,
+                        weight = 3,
+                        layerId = Subloc_tes_plots_mam()$Name[i],
+                        popup = paste0("<b>Plot: </b><br>",
+                                       Subloc_tes_plots_mam()$Description[i],
+                                       "<br><b>Type: </b>",
+                                       Subloc_tes_plots_mam()$Type[i],
+                                       "<br><b>Dimensions: </b>",
+                                       Subloc_tes_plots_mam()$Plot.Size[i])
+          )
+      }
+    }
+    else if (!input$sublocs_mammalgrid | (nrow(Subloc_tes_plots_mam()) == 0)) {
+      proxy %>% removeMarker(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Distributed Mammal Grid"))$Name) %>%
+        removeShape(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Distributed Mammal Grid"))$Name)
+    }
+  })
+  # Mosquito
+  observe({
+    proxy <- leafletProxy('map')
+    if (input$sublocs_mosquitoplot & nrow(Subloc_tes_plots_mos()) != 0) {
+      for (i in 1:nrow(Subloc_tes_plots_mos())) {
+        proxy %>%
+          addMarkers(data = Subloc_tes_plots_mos()[i,],
+                     icon = ~NEON_locations[Subloc_tes_plots_mos()$Type[i]],
+                     popup = paste0("<b>Plot: </b><br>",
+                                    Subloc_tes_plots_mos()$Description[i],
+                                    "<br><b>Type: </b>",
+                                    Subloc_tes_plots_mos()$Type[i],
+                                    "<br><b>Dimensions: </b>",
+                                    Subloc_tes_plots_mos()$Plot.Size[i]),
+                     group = "Sub Locations",
+                     layerId = Subloc_tes_plots_mos()$Name[i])
+      }
+    }
+    else if (!input$sublocs_mosquitoplot | (nrow(Subloc_tes_plots_mos()) == 0)) {
+      proxy %>% removeMarker(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Distributed Mosquito Plot"))$Name)
+    }
+  })
+  # Tick
+  observe({
+    proxy <- leafletProxy('map')
+    if (input$sublocs_tickplot & nrow(Subloc_tes_plots_tick()) != 0) {
+      for (i in 1:nrow(Subloc_tes_plots_tick())) {
+        proxy %>%
+          addMarkers(data = Subloc_tes_plots_tick()[i,],
+                     icon = ~NEON_locations[Subloc_tes_plots_tick()$Type[i]],
+                     popup = paste0("<b>Plot: </b><br>",
+                                    Subloc_tes_plots_tick()$Description[i],
+                                    "<br><b>Type: </b>",
+                                    Subloc_tes_plots_tick()$Type[i],
+                                    "<br><b>Dimensions: </b>",
+                                    Subloc_tes_plots_tick()$Plot.Size[i]),
+                     group = "Sub Locations",
+                     layerId = Subloc_tes_plots_tick()$Name[i]) %>%
+          addRectangles(lng1 = geosphere::destPoint(p = c(Subloc_tes_plots_tick()$Longitude[i], Subloc_tes_plots_tick()$Latitude[i]), b = 225, d = 20*sqrt(2))[1],
+                        lat1 = geosphere::destPoint(p = c(Subloc_tes_plots_tick()$Longitude[i], Subloc_tes_plots_tick()$Latitude[i]), b = 225, d = 20*sqrt(2))[2],
+                        lng2 = geosphere::destPoint(p = c(Subloc_tes_plots_tick()$Longitude[i], Subloc_tes_plots_tick()$Latitude[i]), b = 45, d = 20*sqrt(2))[1],
+                        lat2 = geosphere::destPoint(p = c(Subloc_tes_plots_tick()$Longitude[i], Subloc_tes_plots_tick()$Latitude[i]), b = 45, d = 20*sqrt(2))[2],
+                        color = "#49E2BD",
+                        fillOpacity = 0,
+                        weight = 3,
+                        layerId = Subloc_tes_plots_tick()$Name[i],
+                        popup = paste0("<b>Plot: </b><br>",
+                                       Subloc_tes_plots_tick()$Description[i],
+                                       "<br><b>Type: </b>",
+                                       Subloc_tes_plots_tick()$Type[i],
+                                       "<br><b>Dimensions: </b>",
+                                       Subloc_tes_plots_tick()$Plot.Size[i])
+          )
+      }
+    }
+    else if (!input$sublocs_tickplot | (nrow(Subloc_tes_plots_tick()) == 0)) {
+      proxy %>% removeMarker(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Distributed Tick Plot"))$Name) %>%
+        removeShape(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Distributed Tick Plot"))$Name)
+    }
+  })
+  # Phenology
+  observe({
+    proxy <- leafletProxy('map')
+    if (input$sublocs_phenologyplot & nrow(Subloc_tes_plots_phe()) != 0) {
+      for (i in 1:nrow(Subloc_tes_plots_phe())) {
+        proxy %>%
+          addMarkers(data = Subloc_tes_plots_phe()[i,],
+                     icon = ~NEON_locations[Subloc_tes_plots_phe()$Type[i]],
+                     popup = paste0("<b>Plot: </b><br>",
+                                    Subloc_tes_plots_phe()$Description[i],
+                                    "<br><b>Type: </b>",
+                                    Subloc_tes_plots_phe()$Type[i],
+                                    "<br><b>Dimensions: </b>",
+                                    Subloc_tes_plots_phe()$Plot.Size[i]),
+                     group = "Sub Locations",
+                     layerId = Subloc_tes_plots_phe()$Name[i]) %>%
+          addRectangles(lng1 = geosphere::destPoint(p = c(Subloc_tes_plots_phe()$Longitude[i], Subloc_tes_plots_phe()$Latitude[i]), b = 225, d = 100*sqrt(2))[1],
+                        lat1 = geosphere::destPoint(p = c(Subloc_tes_plots_phe()$Longitude[i], Subloc_tes_plots_phe()$Latitude[i]), b = 225, d = 100*sqrt(2))[2],
+                        lng2 = geosphere::destPoint(p = c(Subloc_tes_plots_phe()$Longitude[i], Subloc_tes_plots_phe()$Latitude[i]), b = 45, d = 100*sqrt(2))[1],
+                        lat2 = geosphere::destPoint(p = c(Subloc_tes_plots_phe()$Longitude[i], Subloc_tes_plots_phe()$Latitude[i]), b = 45, d = 100*sqrt(2))[2],
+                        color = "#49E2BD",
+                        fillOpacity = 0,
+                        weight = 3,
+                        layerId = Subloc_tes_plots_phe()$Name[i],
+                        popup = paste0("<b>Plot: </b><br>",
+                                       Subloc_tes_plots_phe()$Description[i],
+                                       "<br><b>Type: </b>",
+                                       Subloc_tes_plots_phe()$Type[i],
+                                       "<br><b>Dimensions: </b>",
+                                       Subloc_tes_plots_phe()$Plot.Size[i])
+          )
+      }
+    }
+    else if (!input$sublocs_tickplot | (nrow(Subloc_tes_plots_phe()) == 0)) {
+      proxy %>% removeMarker(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Tower Phenology Plot"))$Name) %>%
+        removeShape(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Tower Phenology Plot"))$Name)
+    }
+  })
+  # Bird
+  observe({
+    proxy <- leafletProxy('map')
+    if (input$sublocs_birdgrid & nrow(Subloc_tes_plots_bird()) != 0) {
+      for (i in 1:nrow(Subloc_tes_plots_bird())) {
+        proxy %>%
+          addRectangles(lng1 = geosphere::destPoint(p = c(Subloc_tes_plots_bird()$Longitude[i], Subloc_tes_plots_bird()$Latitude[i]), b = 225, d = 250*sqrt(2))[1],
+                        lat1 = geosphere::destPoint(p = c(Subloc_tes_plots_bird()$Longitude[i], Subloc_tes_plots_bird()$Latitude[i]), b = 225, d = 250*sqrt(2))[2],
+                        lng2 = geosphere::destPoint(p = c(Subloc_tes_plots_bird()$Longitude[i], Subloc_tes_plots_bird()$Latitude[i]), b = 45, d = 250*sqrt(2))[1],
+                        lat2 = geosphere::destPoint(p = c(Subloc_tes_plots_bird()$Longitude[i], Subloc_tes_plots_bird()$Latitude[i]), b = 45, d = 250*sqrt(2))[2],
+                        group = "Sub Locations",
+                        color = "#155AA8",
+                        opacity = 1,
+                        fillOpacity = 0,
+                        weight = 3,
+                        layerId = Subloc_tes_plots_bird()$Name[i],
+                        popup = paste0("<b>Plot: </b><br>",
+                                       Subloc_tes_plots_bird()$Description[i],
+                                       "<br><b>Type: </b>",
+                                       Subloc_tes_plots_bird()$Type[i],
+                                       "<br><b>Dimensions: </b>",
+                                       Subloc_tes_plots_bird()$Plot.Size[i])
+          )
+      }
+    }
+    else if (!input$sublocs_birdgrid | (nrow(Subloc_tes_plots_bird()) == 0)) {
+      proxy %>% removeShape(layerId = (FieldSite_plots_tes %>% filter(Type %in% "Distributed Bird Grid"))$Name)
+    }
+  })
+  # Key
+  observe(if (input$sublocs_tes_selectall) {
+    updateCheckboxInput(session, inputId = "sublocs_baseplot", value = TRUE)
+    updateCheckboxInput(session, inputId = "sublocs_birdgrid", value = TRUE)
+    updateCheckboxInput(session, inputId = "sublocs_mammalgrid", value = TRUE)
+    updateCheckboxInput(session, inputId = "sublocs_mosquitoplot", value = TRUE)
+    updateCheckboxInput(session, inputId = "sublocs_tickplot", value = TRUE)
+    updateCheckboxInput(session, inputId = "sublocs_phenologyplot", value = TRUE)
+  })
+  observe(if (!input$sublocs_tes_selectall) {
+    updateCheckboxInput(session, inputId = "sublocs_baseplot", value = FALSE)
+    updateCheckboxInput(session, inputId = "sublocs_birdgrid", value = FALSE)
+    updateCheckboxInput(session, inputId = "sublocs_mammalgrid", value = FALSE)
+    updateCheckboxInput(session, inputId = "sublocs_mosquitoplot", value = FALSE)
+    updateCheckboxInput(session, inputId = "sublocs_tickplot", value = FALSE)
+    updateCheckboxInput(session, inputId = "sublocs_phenologyplot", value = FALSE)
   })
   # Hide TOS, LTAR when launching app (TOS can make computer slow)
   leafletProxy("map") %>% hideGroup("TOS") %>% hideGroup("LTAR")
@@ -288,10 +534,18 @@ function(input, output, session) {
   })
   #### NEON ####
   observeEvent(input$zoomtosite,
-               leafletProxy("map") %>% flyTo(lng = FieldSite_point$siteLongitude[FieldSite_point$siteCode %in% input$NEONsite_site],
-                                             lat = FieldSite_point$siteLatitude[FieldSite_point$siteCode %in% input$NEONsite_site],
-                                             zoom = 10)
-  )
+               leafletProxy("map") %>% flyTo(lng = FieldSite_point$siteLongitude[FieldSite_point$siteCode %in% input$NEONsite_zoom],
+                                             lat = FieldSite_point$siteLatitude[FieldSite_point$siteCode %in% input$NEONsite_zoom],
+                                             zoom = 12)
+               )
+  observeEvent(eventExpr = input$addsublocs,
+               handlerExpr = {
+                 leafletProxy('map') %>% showGroup(group = "Sub Locations")
+                 updateTabsetPanel(session, inputId = "main", selected = "filter")
+                 choices <- input$fieldsite_sublocs
+                 updateSelectInput(session, inputId = "fieldsite_sublocs", selected = c(choices, input$NEONsite_zoom))
+               })
+  
   ####— NEON: Step 1- Find data ####
   ####—— 1a: By Site####
   # Variables
@@ -315,7 +569,7 @@ function(input, output, session) {
   })
   NEONproductlist_site <- reactive(NEONproductlist_site_filtered_keyword()[(NEONproductlist_site_filtered_keyword()$producttype %in% datatype_filters_site()),])
   # for dropdown
-  output$dropdown_site <- renderPrint(FieldSite_point$siteName[FieldSite_point$siteCode %in% input$NEONsite_zoom])
+  output$dropdown_site <- renderPrint(paste0(FieldSite_point$siteName[FieldSite_point$siteCode %in% input$NEONsite_zoom], " ", FieldSite_point$`Habitat Specific`[FieldSite_point$siteCode %in% input$NEONsite_zoom]))
   output$dataproduct_number <- renderPrint(nrow(NEONproducts_product[filter_site(site = input$NEONsite_zoom),]))
   # single: filtering column of products for one site through ID
   NEONproductID_site <- reactive(req(
@@ -418,8 +672,10 @@ function(input, output, session) {
   })
   
   ####— NEON: Step 2- Download Data####
-  # Variables
+  ####—— Variables ####
   Product_ID_general <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_general)))
+  Product_ID_middle <- reactive(req(strsplit(Product_ID_general(), "[.]")[[1]][2]))
+  Folder_general <- reactive(req(paste0("filesToStack", Product_ID_middle())))
   Product_ID_specific <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_specific)))
   Product_ID_AOP <- reactive(req(gsub(pattern = " ", replacement = "", x = input$dpID_AOP)))
   Field_Site_general <- reactive(req(
@@ -437,46 +693,98 @@ function(input, output, session) {
   Date_specific_parts <- reactive(req(strsplit(Date_specific_long(), "-")[[1]]))
   Date_specific <- reactive(req(paste0(Date_specific_parts()[1], "-", Date_specific_parts()[2])))
   Year_AOP <- reactive(req(strsplit(as.character(input$year_AOP), "-")[[1]][1]))
-  Folder_path_specific <- reactive(paste0("../NEON_", Field_Site_specific(), "_", Date_specific()))
-  # Download NEON data: general
+  Folder_path_general <- reactive(req(paste0("../NEON Downloads/NEON_", Field_Site_general(), "_", Product_ID_middle())))
+  Folder_path_specific <- reactive(req(paste0("../NEON Downloads/NEON_", Field_Site_specific(), "_", Date_specific())))
+  ####—— Download NEON data: general####
   observeEvent(eventExpr = input$download_NEON_general,
                handlerExpr = {
-                 download <- try(zipsByProduct(dpID = Product_ID_general(), site = Field_Site_general(), package = Package_type_general(), check.size = FALSE, savepath = '..'), silent = TRUE)
+                 showNotification(ui = "Download in progess…", id = "download_general", type = "message")
+                 download <- try(zipsByProduct(dpID = Product_ID_general(), site = Field_Site_general(), package = Package_type_general(), check.size = FALSE, savepath = '../NEON Downloads/'), silent = TRUE)
                  if (class(download) == "try-error") {
-                   sendSweetAlert(session, title = "Download failed", text = paste0("This could be due to the data package you tried to obtain or the neonUtlities package used to pull data. Read the error code message: ", strsplit(download, ":")[[1]][2]), type = 'error')
+                   removeNotification(id = "download_general")
+                   sendSweetAlert(session, title = "Download failed", text = paste0("This could be due to the data package you tried to obtain or the neonUtlities package used to pull data. Read the error code message: ", strsplit(download, ":")[[1]][-1]), type = 'error')
                  } else {
-                   sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
+                   file.rename(from = paste0("../NEON Downloads/", Folder_general()), to = Folder_path_general())
+                   removeNotification(id = "download_general")
+                   sendSweetAlert(session, title = "File downloaded", text = "Check the 'NEON Downloads' directory. Go to step 2 to unzip files and make them more accesible.", type = 'success')
                  }
                })
-  # Download NEON data: specific — creates a folder and adds files to folder
+  ####—— Download NEON data: specific ####
   observeEvent(eventExpr = input$download_NEON_specific,
                handlerExpr = {
+                 showNotification(ui = "Download in progess…", id = "download_specific", type = "message")
                  dir.create(path = Folder_path_specific())
                  download <- try(getPackage(dpID = Product_ID_specific(), site_code = Field_Site_specific(), year_month = Date_specific(), package = Package_type_specific(), savepath = Folder_path_specific()), silent = TRUE)
                  if (class(download) == "try-error") {
+                   if (length(dir(path = Folder_path_specific())) == 0) {
+                     unlink(x = Folder_path_specific(), recursive = TRUE)
+                   }
+                   removeNotification(id = "download_specific")
                    sendSweetAlert(session, title = "Download failed", text = paste0("This could be due to the data package you tried to obtain or the neonUtlities package used to pull data. Read the error message: ", download), type = 'error')
                  } else {
-                   sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
+                   removeNotification(id = "download_specific")
+                   sendSweetAlert(session, title = "File downloaded", text = "Check the 'NEON Downloads' directory. Go to step 2 to unzip files and make them more accesible.", type = 'success')
                  }
                })
-  # Download NEON data: AOP
+  ####—— Download NEON data: AOP####
+  product_table <- reactive(NEONproducts_product[NEONproducts_product$productCode == Product_ID_AOP(),])
+  # Checking is data product is AOP
+  is_AOP <- reactive(if (nrow(product_table()) != 0) {
+    if (product_table()$productScienceTeamAbbr == "AOP") {
+      "YES"
+    } else {
+      "NO"
+    }
+  } else {
+    "None"
+  })
   output$check_AOP <- renderPrint({
-    product_table <- reactive(NEONproducts_product[NEONproducts_product$productCode == Product_ID_AOP(),])
-    if (nrow(product_table()) != 0) {
-      if (product_table()$productScienceTeamAbbr == "AOP") {
-        "YES"
-      } else {
-        "NO"
-      }
+    if (is_AOP() != "None") {
+      is_AOP()
     }
   })
+  # Calculating Size
+  observeEvent(eventExpr = input$get_AOP_size,
+               handlerExpr = {
+                 if (is_AOP() != "YES") {
+                   sendSweetAlert(session, title = "Download failed", text = "Please choose an AOP product", type = 'error')
+                 } else {
+                   showNotification(ui = "Calculation in progress...", id = "calculation_AOP", type = "message")
+                   data_test <- try(nneo_data(product_code = Product_ID_AOP(), site_code = Field_Site_AOP(), year_month = paste0(Year_AOP(), "-01")))
+                   if (class(data_test) == "try-error") {
+                     removeNotification(id = "calculation_AOP")
+                     sendSweetAlert(session, title = "Calculation failed", text = paste0("The product/site/year-month combination that you tried to calculate size for was invalid. Read the error message: ", strsplit(data_test, ":")[[1]][2]), type = 'error')
+                   } else {
+                     total_size <- 0
+                     for (i in c("01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12")) {
+                       data <- nneo_data(product_code = Product_ID_AOP(), site_code = Field_Site_AOP(), year_month = paste0(Year_AOP(), "-", i))$data$files
+                       size <- as.numeric(data$size)
+                       total_size <- total_size + sum(size)
+                     }
+                     if (total_size < 10^9 & total_size != 0) {
+                       size_mb <- total_size * 10^-6
+                       total_size <- paste0(as.character(size_mb), " MB")
+                     } else if (total_size > 10^9) {
+                       size_gb <- total_size * 10^-9
+                       total_size <- paste0(as.character(size_gb), " GB")
+                     } else if (total_size == 0) {
+                       total_size <- "No data available"
+                     }
+                     removeNotification(id = "calculation_AOP")
+                     output$AOP_size <- renderPrint(total_size)
+                   }
+                 }
+               })
   observeEvent(eventExpr = input$download_NEON_AOP,
                handlerExpr = {
+                 showNotification(ui = "Download in progess…", id = "download_AOP", type = "message")
                  download <- try(byFileAOP(dpID = Product_ID_AOP(), site = Field_Site_AOP(), year = Year_AOP(), check.size = FALSE, savepath = '..'), silent = TRUE)
                  if (class(download) == "try-error") {
+                   removeNotification("download_AOP")
                    sendSweetAlert(session, title = "Download failed", text = paste0("This could be due to the data package you tried to obtain or the neonUtlities package used to pull data. Read the error message: ", strsplit(download, ":")[[1]][2]), type = 'error')
                  } else {
-                   sendSweetAlert(session, title = "File downloaded", text = "Check the directory containing 'Calliope View'. Go to step 2 to unzip files and make them more accesible.", type = 'success')
+                   removeNotification("download_AOP")
+                   sendSweetAlert(session, title = "File downloaded", text = "Check the 'NEON Download' directory. Go to step 2 to unzip files and make them more accesible.", type = 'success')
                  }
                })
   
